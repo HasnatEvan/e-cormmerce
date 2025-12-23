@@ -97,6 +97,7 @@ const Checkout = () => {
 
     setOrderLoading(true);
 
+    // 🔥 FIXED: color & size added
     const orderData = {
       userEmail: user.email,
       phone,
@@ -104,12 +105,16 @@ const Checkout = () => {
       areaType,
       address,
       notes,
+
       items: cart.map((item) => ({
         productId: item.productId,
         name: item.name,
         price: item.price,
         quantity: item.cartQuantity,
+        color: item.selectedColor || null,
+        size: item.selectedSize || null,
       })),
+
       totalQuantity,
       subTotal,
       deliveryFee: DELIVERY_FEE,
@@ -117,7 +122,10 @@ const Checkout = () => {
       paymentMethod,
       trxId,
       status: "Pending",
+      orderTime: new Date(),
     };
+
+    console.log("ORDER DATA:", orderData);
 
     try {
       const res = await axiosSecure.post("/orders", orderData);
@@ -126,7 +134,7 @@ const Checkout = () => {
         setTimeout(() => {
           toast.success("Order placed successfully ✅");
           navigate("/success");
-        }, 3000);
+        }, 2000);
       } else {
         setOrderLoading(false);
       }
@@ -255,7 +263,11 @@ const Checkout = () => {
               className="flex justify-between text-sm mb-2 gap-2"
             >
               <span className="truncate max-w-[200px] font-medium">
-                {item.name} <span className="text-gray-500">(x{item.cartQuantity})</span>
+                {item.name}
+                <span className="text-gray-500">
+                  {" "}
+                  (x{item.cartQuantity})
+                </span>
               </span>
               <span className="shrink-0 font-medium">
                 ৳ {item.price * item.cartQuantity}
@@ -287,4 +299,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;         
+export default Checkout;

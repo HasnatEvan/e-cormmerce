@@ -16,15 +16,14 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
   const [language, setLanguage] = useState("English");
 
   const [categories, setCategories] = useState([]);
-
   const axiosPublic = useAxiosPublic();
 
   /* ================= Fetch Categories ================= */
   useEffect(() => {
     axiosPublic
       .get("/categories")
-      .then(res => setCategories(res.data))
-      .catch(err => console.log(err));
+      .then((res) => setCategories(res.data))
+      .catch(() => setCategories([]));
   }, [axiosPublic]);
 
   const brands = ["Campaign", "Trending", "Brands", "Outlets"];
@@ -115,7 +114,9 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
 
             {/* Categories */}
             <button
-              onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+              onClick={() =>
+                setMobileCategoriesOpen(!mobileCategoriesOpen)
+              }
               className="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-50"
             >
               <span>Categories</span>
@@ -129,12 +130,17 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
             {mobileCategoriesOpen && (
               <ul className="ml-4 border-l pl-3">
                 {categories.map((cat, idx) => (
-                  <li
-                    key={idx}
-                    className="py-1 text-gray-700 hover:text-blue-600 cursor-pointer"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {cat.name}
+                  <li key={idx}>
+                    <Link
+                      to={`/category/${encodeURIComponent(cat.name)}`}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setMobileCategoriesOpen(false);
+                      }}
+                      className="block py-1 text-gray-700 hover:text-blue-600"
+                    >
+                      {cat.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -142,7 +148,9 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
 
             {/* Pages */}
             <button
-              onClick={() => setMobileBrandsOpen(!mobileBrandsOpen)}
+              onClick={() =>
+                setMobileBrandsOpen(!mobileBrandsOpen)
+              }
               className="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-50"
             >
               <span>Pages</span>
@@ -168,7 +176,9 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
 
             {/* Language */}
             <button
-              onClick={() => setMobileLanguageOpen(!mobileLanguageOpen)}
+              onClick={() =>
+                setMobileLanguageOpen(!mobileLanguageOpen)
+              }
               className="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-50"
             >
               <span>Language</span>
@@ -188,7 +198,10 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
                   }}
                   className="py-1 flex items-center gap-2 cursor-pointer"
                 >
-                  <img src={englishFlag} className="w-5 h-5 rounded-full" />
+                  <img
+                    src={englishFlag}
+                    className="w-5 h-5 rounded-full"
+                  />
                   English
                 </li>
 
@@ -199,7 +212,10 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
                   }}
                   className="py-1 flex items-center gap-2 cursor-pointer"
                 >
-                  <img src={bdFlag} className="w-5 h-5 rounded-full" />
+                  <img
+                    src={bdFlag}
+                    className="w-5 h-5 rounded-full"
+                  />
                   বাংলা
                 </li>
               </ul>

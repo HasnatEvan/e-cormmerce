@@ -10,6 +10,7 @@ const SingleCheckout = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
+  // 🔥 product state from navigate
   const product = state?.product || null;
 
   /* =====================
@@ -35,7 +36,9 @@ const SingleCheckout = () => {
      SAFETY REDIRECT
   ===================== */
   useEffect(() => {
-    if (!product) navigate("/");
+    if (!product) {
+      navigate("/");
+    }
   }, [product, navigate]);
 
   if (!product) return null;
@@ -75,6 +78,10 @@ const SingleCheckout = () => {
 
     setOrderLoading(true);
 
+    // 🔥 DEBUG (optional)
+    console.log("PRODUCT STATE:", product);
+
+    // ✅ FIXED: size & color added
     const orderData = {
       userEmail: user.email,
       phone,
@@ -82,14 +89,18 @@ const SingleCheckout = () => {
       areaType,
       address,
       notes,
+
       items: [
         {
           productId: product.productId,
           name: product.name,
           price: product.price,
           quantity: product.quantity,
+          color: product.selectedColor || null,
+          size: product.selectedSize || null,
         },
       ],
+
       totalQuantity,
       subTotal,
       deliveryFee: DELIVERY_FEE,
@@ -97,21 +108,19 @@ const SingleCheckout = () => {
       paymentMethod,
       trxId,
       status: "Pending",
+      orderTime: new Date(),
     };
+
+    console.log("ORDER DATA:", orderData);
 
     try {
       const res = await axiosSecure.post("/orders", orderData);
 
       if (res.data.success) {
-        // ⏳ 3 seconds loading first
         setTimeout(() => {
           toast.success("Order placed successfully ✅");
-
-          // toast দেখানোর পর redirect
-          setTimeout(() => {
-            navigate("/success");
-          }, 1000);
-        }, 3000);
+          navigate("/success");
+        }, 2000);
       } else {
         setOrderLoading(false);
       }
@@ -229,7 +238,10 @@ const SingleCheckout = () => {
 
           <div className="flex justify-between text-sm mb-2">
             <span className="truncate max-w-[200px] font-medium">
-              {product.name} <span className="text-gray-500">(x{product.quantity})</span>
+              {product.name}{" "}
+              <span className="text-gray-500">
+                (x{product.quantity})
+              </span>
             </span>
             <span className="font-medium">৳ {subTotal}</span>
           </div>

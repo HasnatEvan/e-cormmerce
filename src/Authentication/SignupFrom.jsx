@@ -3,9 +3,10 @@ import signupImg from "../../src/assets/Signup/sign_up.png";
 import useAuth from "../Hooks/useAuth";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
 import { toast } from "react-toastify";
+import { imageUpload } from "../Api/utils";
 
 const SignupFrom = () => {
-  const { createUser } = useAuth();
+  const { createUser, updateUserProfile } = useAuth();
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
 
@@ -14,10 +15,10 @@ const SignupFrom = () => {
     const form = event.target;
 
     const name = form.name.value;
-    const phoneNumber = form.phoneNumber.value;
     const email = form.email.value;
     const password = form.password.value;
     const confirmPassword = form.confirmPassword.value;
+    const photoFile = form.photo.files[0]; // 📸 photo file
 
     // 🔐 Password match check
     if (password !== confirmPassword) {
@@ -26,14 +27,23 @@ const SignupFrom = () => {
     }
 
     try {
-      // 🔥 Create user (Firebase/Auth)
+      // 🔥 Upload image
+      let photoURL = null;
+      if (photoFile) {
+        photoURL = await imageUpload(photoFile);
+      }
+
+      // 🔥 Create user (Firebase)
       await createUser(email, password);
+
+      // 👤 Update Firebase profile (name + photo)
+      await updateUserProfile(name, photoURL);
 
       // 📦 User data for database
       const userInfo = {
         name,
-        phoneNumber,
         email,
+        photoURL,
       };
 
       // 💾 Save user to database
@@ -68,18 +78,19 @@ const SignupFrom = () => {
             />
 
             <input
-              type="text"
-              name="phoneNumber"
-              placeholder="Phone Number"
-              className="w-full bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-
-            <input
               type="email"
               name="email"
               placeholder="E-mail Address"
               className="w-full bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+
+            {/* 📸 PHOTO UPLOAD */}
+            <input
+              type="file"
+              name="photo"
+              accept="image/*"
+              className="w-full bg-gray-100 px-4 py-2"
               required
             />
 
@@ -109,7 +120,10 @@ const SignupFrom = () => {
 
           <p className="text-sm text-gray-600 mt-4 text-center">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-500 font-medium hover:underline">
+            <Link
+              to="/login"
+              className="text-blue-500 font-medium hover:underline"
+            >
               Login now
             </Link>
           </p>

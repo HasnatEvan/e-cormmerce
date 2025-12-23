@@ -1,10 +1,11 @@
-// NewArrivals.jsx
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosPublic from "../../../Hooks/useAxiosPublic";
 import Card from "../../../Components/Card/Card";
 
 const NewArrivals = () => {
   const axiosPublic = useAxiosPublic();
+  const [showAll, setShowAll] = useState(false);
 
   const {
     data: products = [],
@@ -20,15 +21,19 @@ const NewArrivals = () => {
 
   /* ============ Loading State ============ */
   if (isLoading) {
-    return <p className="text-center py-10">Loading products...</p>;
+    return (
+      <div className="py-20 text-center text-gray-500">
+        Loading products...
+      </div>
+    );
   }
 
   /* ============ Error State ============ */
   if (isError) {
     return (
-      <p className="text-center py-10 text-red-500">
+      <div className="py-20 text-center text-red-500">
         Failed to load products
-      </p>
+      </div>
     );
   }
 
@@ -36,6 +41,11 @@ const NewArrivals = () => {
   const newArrivalProducts = products.filter(
     (product) => product.productType === "New Arrivals"
   );
+
+  /* ============ LIMIT LOGIC ============ */
+  const visibleProducts = showAll
+    ? newArrivalProducts
+    : newArrivalProducts.slice(0, 6);
 
   return (
     <div className="px-4 py-8">
@@ -50,11 +60,14 @@ const NewArrivals = () => {
           </p>
         </div>
 
-        {/* View All only if New Arrivals exist */}
-        {newArrivalProducts.length > 0 && (
+        {/* View All / Show Less */}
+        {newArrivalProducts.length > 6 && (
           <div className="flex justify-end w-full sm:w-auto">
-            <button className="text-blue-500 text-xs sm:text-sm font-medium">
-              View All
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-blue-500 text-xs sm:text-sm font-medium hover:underline"
+            >
+              {showAll ? "Show Less" : "View All"}
             </button>
           </div>
         )}
@@ -73,7 +86,7 @@ const NewArrivals = () => {
       ) : (
         /* ============ Products Grid ============ */
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {newArrivalProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <Card key={product._id} product={product} />
           ))}
         </div>

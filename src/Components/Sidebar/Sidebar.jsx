@@ -1,16 +1,35 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaShoppingCart,
   FaHeart,
   FaUserCircle,
   FaLock,
   FaSignOutAlt,
-  FaPlus
+  FaPlus,
+  FaBoxes,
 } from "react-icons/fa";
-import { MdDashboard, MdRateReview } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import { RiFileList3Line } from "react-icons/ri";
+import { toast } from "react-toastify";
+import useAuth from "../../Hooks/useAuth";
 
 const Sidebar = () => {
+  const { user, logOut } = useAuth();
+  const navigate = useNavigate();
+
+  /* =====================
+     LOGOUT HANDLER
+  ===================== */
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch {
+      toast.error("Logout failed");
+    }
+  };
+
   return (
     <div
       className="
@@ -27,12 +46,24 @@ const Sidebar = () => {
     >
       {/* ================= Profile ================= */}
       <div className="flex flex-col items-center text-center mb-6">
-        <FaUserCircle className="text-gray-400 text-6xl md:text-7xl" />
-        <h2 className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-          None
+        {user?.photoURL ? (
+          <div className="w-24 h-24 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center">
+            <img
+              src={user.photoURL}
+              alt="Profile"
+              className="w-full h-full object-contain rounded-full p-2"
+            />
+          </div>
+        ) : (
+          <FaUserCircle className="text-gray-400 text-7xl" />
+        )}
+
+        <h2 className="mt-3 font-semibold text-gray-800 text-sm md:text-base">
+          {user?.displayName || "User"}
         </h2>
+
         <p className="text-gray-500 text-xs md:text-sm break-all">
-          hasnatevan59@gmail.com
+          {user?.email}
         </p>
       </div>
 
@@ -48,53 +79,14 @@ const Sidebar = () => {
           </Link>
         </li>
 
+        {/* 🔥 Inventory */}
         <li>
           <Link
-            to="/cart"
+            to="/inventory"
             className="flex items-center gap-3 text-gray-700 hover:text-red-500"
           >
-            <FaShoppingCart className="text-lg" />
-            Cart History
-          </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/purchase-history"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <RiFileList3Line className="text-lg" />
-            Purchase History
-          </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/wishlist"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaHeart className="text-lg" />
-            Wishlist
-          </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/my-reviews"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <MdRateReview className="text-lg" />
-            My Review
-          </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/profile"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaUserCircle className="text-lg" />
-            Manage Profile
+            <FaBoxes className="text-lg" />
+            Inventory
           </Link>
         </li>
 
@@ -110,6 +102,36 @@ const Sidebar = () => {
 
         <li>
           <Link
+            to="/cart"
+            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
+          >
+            <FaShoppingCart className="text-lg" />
+            Cart History
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to="/wishlist"
+            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
+          >
+            <FaHeart className="text-lg" />
+            Wishlist
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to="/purchase-history"
+            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
+          >
+            <RiFileList3Line className="text-lg" />
+            Purchase History
+          </Link>
+        </li>
+
+        <li>
+          <Link
             to="/change-password"
             className="flex items-center gap-3 text-gray-700 hover:text-red-500"
           >
@@ -118,14 +140,15 @@ const Sidebar = () => {
           </Link>
         </li>
 
+        {/* ================= Logout ================= */}
         <li>
-          <Link
-            to="/logout"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 text-gray-700 hover:text-red-500 w-full text-left"
           >
             <FaSignOutAlt className="text-lg" />
             Logout
-          </Link>
+          </button>
         </li>
       </ul>
     </div>

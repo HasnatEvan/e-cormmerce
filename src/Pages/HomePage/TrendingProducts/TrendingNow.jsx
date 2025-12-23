@@ -1,10 +1,11 @@
-// TrendingNow.jsx
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosPublic from "../../../Hooks/useAxiosPublic";
 import Card from "../../../Components/Card/Card";
 
 const TrendingNow = () => {
   const axiosPublic = useAxiosPublic();
+  const [showAll, setShowAll] = useState(false);
 
   const {
     data: products = [],
@@ -20,7 +21,11 @@ const TrendingNow = () => {
 
   /* ============ Loading State ============ */
   if (isLoading) {
-    return <p className="text-center py-10">Loading products...</p>;
+    return (
+      <p className="text-center py-10 text-gray-500">
+        Loading products...
+      </p>
+    );
   }
 
   /* ============ Error State ============ */
@@ -37,6 +42,11 @@ const TrendingNow = () => {
     (product) => product.productType === "Trending Now"
   );
 
+  /* ============ LIMIT LOGIC ============ */
+  const visibleProducts = showAll
+    ? trendingProducts
+    : trendingProducts.slice(0, 6);
+
   return (
     <div className="px-4 py-8">
       {/* Header */}
@@ -50,11 +60,14 @@ const TrendingNow = () => {
           </p>
         </div>
 
-        {/* View All only if Trending products exist */}
-        {trendingProducts.length > 0 && (
+        {/* View All / Show Less */}
+        {trendingProducts.length > 6 && (
           <div className="flex justify-end w-full sm:w-auto">
-            <button className="text-blue-500 text-xs sm:text-sm font-medium">
-              View All
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-blue-500 text-xs sm:text-sm font-medium hover:underline"
+            >
+              {showAll ? "Show Less" : "View All"}
             </button>
           </div>
         )}
@@ -73,7 +86,7 @@ const TrendingNow = () => {
       ) : (
         /* ============ Products Grid ============ */
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {trendingProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <Card key={product._id} product={product} />
           ))}
         </div>

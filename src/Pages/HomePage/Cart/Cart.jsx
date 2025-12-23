@@ -42,7 +42,7 @@ const Cart = () => {
   const handleRemove = async (id) => {
     try {
       await axiosSecure.delete(`/carts/${id}`);
-      setCart(prev => prev.filter(item => item._id !== id));
+      setCart((prev) => prev.filter((item) => item._id !== id));
       toast.success("Removed from cart");
     } catch {
       toast.error("Failed to remove item");
@@ -56,7 +56,7 @@ const Cart = () => {
     if (newQty < 1) return;
 
     if (newQty > item.quantity) {
-      toast.error("Stock limit exceeded ❌");
+      toast.error(`Only ${item.quantity} items available ❌`);
       return;
     }
 
@@ -65,15 +65,15 @@ const Cart = () => {
         cartQuantity: newQty,
       });
 
-      setCart(prev =>
-        prev.map(cartItem =>
+      setCart((prev) =>
+        prev.map((cartItem) =>
           cartItem._id === item._id
             ? { ...cartItem, cartQuantity: newQty }
             : cartItem
         )
       );
     } catch {
-      toast.error("Failed to update quantity");
+      toast.error("Stock limit exceeded");
     }
   };
 
@@ -90,7 +90,7 @@ const Cart = () => {
   ===================== */
   const handleCheckout = () => {
     setCheckoutLoading(true);
-    setTimeout(() => navigate("/checkout"), 3000);
+    setTimeout(() => navigate("/checkout"), 2000);
   };
 
   if (loading) {
@@ -110,9 +110,9 @@ const Cart = () => {
           <Sidebar />
         </div>
 
-        {/* Main Content */}
+        {/* Main */}
         <div className="w-full md:w-3/4 flex flex-col min-h-[80vh]">
-          <h2 className="text-xl font-semibold mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
             Cart Summary
           </h2>
 
@@ -124,9 +124,9 @@ const Cart = () => {
             </div>
           ) : (
             <>
-              {/* ===== DESKTOP TABLE ===== */}
+              {/* ================= DESKTOP TABLE ================= */}
               <div className="hidden md:block">
-                <div className="grid grid-cols-12 border-b border-gray-300 pb-2 font-medium text-gray-500">
+                <div className="grid grid-cols-12 border-b border-blue-500 pb-2 text-sm font-medium text-gray-500">
                   <div className="col-span-4">Product</div>
                   <div className="col-span-1 text-center">Color</div>
                   <div className="col-span-1 text-center">Size</div>
@@ -136,18 +136,21 @@ const Cart = () => {
                   <div className="col-span-1 text-center">Action</div>
                 </div>
 
-                {cart.map(item => (
+                {cart.map((item) => (
                   <div
                     key={item._id}
-                    className="grid grid-cols-12 items-center border-b border-gray-300 py-4"
+                    className="grid grid-cols-12 items-center border-b border-blue-200 py-4 text-sm"
                   >
+                    {/* Product */}
                     <div className="col-span-4 flex items-center gap-3">
                       <img
                         src={item.cartImage}
                         alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
+                        className="w-16 h-16 object-cover rounded border border-blue-200"
                       />
-                      <p>{item.name}</p>
+                      <p className="font-medium text-gray-800 line-clamp-3">
+                        {item.name}
+                      </p>
                     </div>
 
                     <div className="col-span-1 text-center">
@@ -158,29 +161,42 @@ const Cart = () => {
                       {item.selectedSize || "None"}
                     </div>
 
-                    <div className="col-span-2 text-center text-red-600 font-semibold">
+                    <div className="col-span-2 text-center font-semibold text-red-600">
                       ৳ {item.price}
                     </div>
 
+                    {/* Quantity */}
                     <div className="col-span-1 flex justify-center gap-2">
                       <button
                         disabled={item.cartQuantity <= 1}
                         onClick={() =>
                           updateQuantity(item, item.cartQuantity - 1)
                         }
-                        className="text-red-500 text-xl disabled:opacity-40"
+                        className="text-red-500 text-lg disabled:opacity-40"
                       >
                         −
                       </button>
 
-                      <span>{item.cartQuantity}</span>
+                      <span className="font-medium">
+                        {item.cartQuantity}
+                      </span>
 
                       <button
-                        disabled={item.cartQuantity >= item.quantity}
-                        onClick={() =>
-                          updateQuantity(item, item.cartQuantity + 1)
-                        }
-                        className="text-red-500 text-xl disabled:opacity-40"
+                        onClick={() => {
+                          if (item.cartQuantity >= item.quantity) {
+                            toast.error("Stock limit reached ❌");
+                            return;
+                          }
+                          updateQuantity(
+                            item,
+                            item.cartQuantity + 1
+                          );
+                        }}
+                        className={`text-red-500 text-lg ${
+                          item.cartQuantity >= item.quantity
+                            ? "opacity-40 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         +
                       </button>
@@ -202,13 +218,100 @@ const Cart = () => {
                 ))}
               </div>
 
-              {/* ===== TOTAL & ACTIONS (BOTTOM) ===== */}
-              <div className="mt-auto border border-gray-300 bg-gray-100 p-4">
+              {/* ================= MOBILE VIEW ================= */}
+              <div className="md:hidden space-y-4">
+                {cart.map((item) => (
+                  <div
+                    key={item._id}
+                    className="border border-blue-300 rounded-lg p-4"
+                  >
+                    <div className="flex gap-3 mb-3">
+                      <img
+                        src={item.cartImage}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded border border-blue-200"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-800 line-clamp-3">
+                          {item.name}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Color: {item.selectedColor || "None"}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Size: {item.selectedSize || "None"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between mb-2 text-sm">
+                      <span>Price</span>
+                      <span className="font-semibold text-red-600">
+                        ৳ {item.price}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center mb-2">
+                      <span>Quantity</span>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          disabled={item.cartQuantity <= 1}
+                          onClick={() =>
+                            updateQuantity(item, item.cartQuantity - 1)
+                          }
+                          className="text-lg text-red-500 disabled:opacity-40"
+                        >
+                          −
+                        </button>
+
+                        <span>{item.cartQuantity}</span>
+
+                        <button
+                          onClick={() => {
+                            if (item.cartQuantity >= item.quantity) {
+                              toast.error("Stock limit reached ❌");
+                              return;
+                            }
+                            updateQuantity(
+                              item,
+                              item.cartQuantity + 1
+                            );
+                          }}
+                          className={`text-lg text-red-500 ${
+                            item.cartQuantity >= item.quantity
+                              ? "opacity-40 cursor-not-allowed"
+                              : ""
+                          }`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between font-semibold mb-2">
+                      <span>Total</span>
+                      <span>
+                        ৳ {item.price * item.cartQuantity}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleRemove(item._id)}
+                      className="text-sm text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* ================= TOTAL ================= */}
+              <div className="mt-auto border border-blue-400 bg-blue-50 p-4">
                 <div className="flex justify-between mb-4">
                   <span className="font-semibold">
-                    Total Item Price:
+                    Total Item Price
                   </span>
-                  <span className="font-semibold">
+                  <span className="font-bold text-lg">
                     ৳ {totalPrice}
                   </span>
                 </div>
@@ -216,20 +319,18 @@ const Cart = () => {
                 <button
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
-                  className="w-full bg-red-600 text-white py-2 font-semibold hover:bg-red-700 flex items-center justify-center disabled:opacity-70"
+                  className="w-full bg-red-600 text-white py-2 font-semibold hover:bg-red-700 disabled:opacity-70"
                 >
-                  {checkoutLoading ? (
-                    <span className="loading loading-infinity loading-xl"></span>
-                  ) : (
-                    "PROCEED TO CHECKOUT"
-                  )}
+                  {checkoutLoading
+                    ? "Processing..."
+                    : "PROCEED TO CHECKOUT"}
                 </button>
               </div>
             </>
           )}
 
           <Link to="/products">
-            <button className="w-full mt-3 border border-gray-300 text-red-600 py-2 font-semibold hover:bg-red-50">
+            <button className="w-full mt-3 border border-blue-500 py-2 text-blue-600 font-semibold hover:bg-blue-50">
               CONTINUE SHOPPING
             </button>
           </Link>
