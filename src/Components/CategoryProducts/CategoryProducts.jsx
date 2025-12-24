@@ -25,7 +25,7 @@ const CategoryProducts = () => {
   /* ================= LOADING ================= */
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-500 text-sm sm:text-base">
           Loading products...
         </p>
@@ -36,7 +36,7 @@ const CategoryProducts = () => {
   /* ================= ERROR ================= */
   if (isError) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-500 text-sm sm:text-base">
           Failed to load products
         </p>
@@ -45,19 +45,20 @@ const CategoryProducts = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8">
-      
+    <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8">
       {/* ================= HEADER ================= */}
-      <h2 className="
-        text-lg sm:text-xl md:text-2xl
-        font-semibold mb-4 sm:mb-6 capitalize
-      ">
+      <h2
+        className="
+          text-lg sm:text-xl md:text-2xl
+          font-semibold mb-4 sm:mb-6 capitalize
+        "
+      >
         {decodeURIComponent(category)} Products
       </h2>
 
       {/* ================= EMPTY ================= */}
       {products.length === 0 ? (
-        <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="flex items-center justify-center h-[60vh]">
           <p className="text-gray-400 text-sm sm:text-base">
             No products found in this category
           </p>

@@ -6,34 +6,36 @@ import {
   ShoppingBag,
   ShoppingCart,
   User,
+  Boxes,
+  PlusSquare,
 } from "lucide-react";
 
 import Sidebar from "./Sidbar";
 import useAuth from "../Hooks/useAuth";
 import useAxiosSecure from "../Hooks/useAxiosSecure";
+import useRole from "../Hooks/useRole";
 
 const MobileBottomNav = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
+  const [role, roleLoading] = useRole();
 
   const [cartCount, setCartCount] = useState(0);
 
-  /* ================= CART COUNT (SAFE EFFECT) ================= */
+  /* ================= CART COUNT ================= */
   useEffect(() => {
     let ignore = false;
 
     const loadCartCount = async () => {
       try {
-        if (!user?.email) {
+        if (!user?.email || role === "admin") {
           if (!ignore) setCartCount(0);
           return;
         }
 
-        const res = await axiosSecure.get(
-          `/carts?email=${user.email}`
-        );
+        const res = await axiosSecure.get(`/carts?email=${user.email}`);
 
         if (!ignore) {
           setCartCount(res.data?.length || 0);
@@ -44,72 +46,96 @@ const MobileBottomNav = () => {
     };
 
     loadCartCount();
+    return () => (ignore = true);
+  }, [user?.email, axiosSecure, role]);
 
-    return () => {
-      ignore = true; // ✅ prevents cascading renders
-    };
-  }, [user?.email, axiosSecure]);
+  if (roleLoading) return null;
 
   return (
     <>
       {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Bottom Navigation (Mobile Only) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md z-30 block md:hidden">
+      {/* ================= BOTTOM NAV ================= */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-md z-30 block md:hidden">
         <div className="flex justify-around items-center py-2">
 
-          {/* Home */}
-          <Link to="/" className="flex flex-col items-center text-blue-600">
-            <Home size={22} />
-            <span className="text-xs">Home</span>
-          </Link>
+          {/* ================= ADMIN NAV ================= */}
+          {role === "admin" ? (
+            <>
+              <Link to="/" className="flex flex-col items-center text-blue-600">
+                <Home size={22} />
+                <span className="text-xs">Home</span>
+              </Link>
 
-          {/* Category */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center text-blue-600"
-          >
-            <Grid size={22} />
-            <span className="text-xs">Category</span>
-          </button>
+              <Link to="/inventory" className="flex flex-col items-center text-blue-600">
+                <Boxes size={22} />
+                <span className="text-xs">Inventory</span>
+              </Link>
 
-          {/* Shop (Center Button) */}
-          <Link
-            to="/all-products"
-            className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600"
-          >
-            <ShoppingBag size={24} />
-            <span className="text-xs">Shop</span>
-          </Link>
+              {/* ⭐ Animated Shop Button ⭐ */}
+              <Link
+                to="/all-products"
+                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 
+                           animate-bounce transition transform hover:scale-110"
+              >
+                <ShoppingBag size={26} />
+                <span className="text-xs">Shop</span>
+              </Link>
 
-          {/* Cart */}
-          <Link
-            to="/cart"
-            className="relative flex flex-col items-center text-blue-600"
-          >
-            <ShoppingCart size={22} />
-            <span className="text-xs">Cart</span>
+              <Link to="/add-products" className="flex flex-col items-center text-blue-600">
+                <PlusSquare size={22} />
+                <span className="text-xs">Add</span>
+              </Link>
 
-            {cartCount > 0 && (
-              <span className="absolute -top-1 right-0 bg-red-500 text-white text-[10px] px-1 rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+              <Link to="/manage-orders" className="flex flex-col items-center text-blue-600">
+                <ShoppingCart size={22} />
+                <span className="text-xs">Orders</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* ================= CUSTOMER NAV ================= */}
+              <Link to="/" className="flex flex-col items-center text-blue-600">
+                <Home size={22} />
+                <span className="text-xs">Home</span>
+              </Link>
 
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="flex flex-col items-center text-blue-600"
-          >
-            <User size={22} />
-            <span className="text-xs">Profile</span>
-          </Link>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex flex-col items-center text-blue-600"
+              >
+                <Grid size={22} />
+                <span className="text-xs">Category</span>
+              </button>
 
+              {/* ⭐ Animated Shop Button ⭐ */}
+              <Link
+                to="/all-products"
+                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 
+                           animate-bounce transition transform hover:scale-110"
+              >
+                <ShoppingBag size={26} />
+                <span className="text-xs">Shop</span>
+              </Link>
+
+              <Link to="/cart" className="relative flex flex-col items-center text-blue-600">
+                <ShoppingCart size={22} />
+                <span className="text-xs">Cart</span>
+
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 right-0 bg-red-500 text-white text-[10px] px-1 rounded-full">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link to="/profile" className="flex flex-col items-center text-blue-600">
+                <User size={22} />
+                <span className="text-xs">Profile</span>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>

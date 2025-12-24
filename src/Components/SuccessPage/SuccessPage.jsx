@@ -30,13 +30,13 @@ const SuccessPage = () => {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Link to="/orders">
+          <Link to="/purchase-history">
             <button className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition">
               View My Orders
             </button>
           </Link>
 
-          <Link to="/products">
+          <Link to="/all-Products">
             <button className="w-full border border-gray-300 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition">
               Continue Shopping
             </button>

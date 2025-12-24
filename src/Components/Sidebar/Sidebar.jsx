@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   FaShoppingCart,
   FaHeart,
@@ -8,14 +8,16 @@ import {
   FaPlus,
   FaBoxes,
 } from "react-icons/fa";
-import { MdDashboard } from "react-icons/md";
 import { RiFileList3Line } from "react-icons/ri";
+import { MdManageAccounts } from "react-icons/md";
 import { toast } from "react-toastify";
 import useAuth from "../../Hooks/useAuth";
+import useRole from "../../Hooks/useRole";
 
 const Sidebar = () => {
   const { user, logOut } = useAuth();
   const navigate = useNavigate();
+  const [role, isLoading] = useRole();
 
   /* =====================
      LOGOUT HANDLER
@@ -29,6 +31,25 @@ const Sidebar = () => {
       toast.error("Logout failed");
     }
   };
+
+  /* =====================
+     ACTIVE / HOVER CLASS
+  ===================== */
+  const menuClass = ({ isActive }) =>
+    `flex items-center gap-3 text-sm font-medium transition-colors duration-200
+     ${isActive ? "text-blue-600" : "text-gray-700"}
+     hover:text-red-500`;
+
+  /* =====================
+     LOADING
+  ===================== */
+  if (isLoading) {
+    return (
+      <div className="w-full md:w-60 h-screen flex items-center justify-center">
+        <span className="loading loading-bars loading-lg text-blue-500"></span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -44,7 +65,7 @@ const Sidebar = () => {
         rounded-lg md:rounded-none
       "
     >
-      {/* ================= Profile ================= */}
+      {/* ================= PROFILE ================= */}
       <div className="flex flex-col items-center text-center mb-6">
         {user?.photoURL ? (
           <div className="w-24 h-24 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center">
@@ -67,84 +88,72 @@ const Sidebar = () => {
         </p>
       </div>
 
-      {/* ================= Menu ================= */}
+      {/* ================= MENU ================= */}
       <ul className="space-y-3 md:space-y-4">
-        <li>
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-3 text-gray-700 font-medium hover:text-red-500"
-          >
-            <MdDashboard className="text-lg" />
-            Dashboard
-          </Link>
-        </li>
+        {/* ===== ADMIN MENU ===== */}
+        {role === "admin" && (
+          <>
+            <li>
+              <NavLink to="/inventory" className={menuClass}>
+                <FaBoxes className="text-lg" />
+                Inventory
+              </NavLink>
+            </li>
 
-        {/* 🔥 Inventory */}
-        <li>
-          <Link
-            to="/inventory"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaBoxes className="text-lg" />
-            Inventory
-          </Link>
-        </li>
+            <li>
+              <NavLink to="/add-products" className={menuClass}>
+                <FaPlus className="text-lg" />
+                Add Products
+              </NavLink>
+            </li>
 
-        <li>
-          <Link
-            to="/add-products"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaPlus className="text-lg" />
-            Add Products
-          </Link>
-        </li>
+            <li>
+              <NavLink to="/manage-orders" className={menuClass}>
+                <MdManageAccounts className="text-lg" />
+                Manage Orders
+              </NavLink>
+            </li>
+          </>
+        )}
 
-        <li>
-          <Link
-            to="/cart"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaShoppingCart className="text-lg" />
-            Cart History
-          </Link>
-        </li>
+        {/* ===== CUSTOMER MENU ===== */}
+        {role === "customer" && (
+          <>
+            <li>
+              <NavLink to="/cart" className={menuClass}>
+                <FaShoppingCart className="text-lg" />
+                Cart History
+              </NavLink>
+            </li>
 
-        <li>
-          <Link
-            to="/wishlist"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <FaHeart className="text-lg" />
-            Wishlist
-          </Link>
-        </li>
+            <li>
+              <NavLink to="/wishlist" className={menuClass}>
+                <FaHeart className="text-lg" />
+                Wishlist
+              </NavLink>
+            </li>
 
-        <li>
-          <Link
-            to="/purchase-history"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
-            <RiFileList3Line className="text-lg" />
-            Purchase History
-          </Link>
-        </li>
+            <li>
+              <NavLink to="/purchase-history" className={menuClass}>
+                <RiFileList3Line className="text-lg" />
+                Purchase History
+              </NavLink>
+            </li>
+          </>
+        )}
 
+        {/* ===== COMMON ===== */}
         <li>
-          <Link
-            to="/change-password"
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500"
-          >
+          <NavLink to="/change-password" className={menuClass}>
             <FaLock className="text-lg" />
             Change Password
-          </Link>
+          </NavLink>
         </li>
 
-        {/* ================= Logout ================= */}
         <li>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 text-gray-700 hover:text-red-500 w-full text-left"
+            className="flex items-center gap-3 text-sm font-medium text-gray-700 hover:text-red-500 transition-colors w-full text-left"
           >
             <FaSignOutAlt className="text-lg" />
             Logout

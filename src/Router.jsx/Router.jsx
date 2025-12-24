@@ -1,116 +1,150 @@
 import { createBrowserRouter } from "react-router-dom";
+
+/* ================= LAYOUT ================= */
 import Main from "../Layout/Main";
+
+/* ================= PUBLIC ================= */
 import Home from "../Pages/HomePage/Home";
-import Dashboard from "../Layout/Dashboard";
-import AddProducts from "../Pages/Dashboard/AdminPages/AddProducts/AddProducts";
 import LoginForm from "../Authentication/LoginFrom";
 import SignupFrom from "../Authentication/SignupFrom";
 import ProductDetails from "../Components/Card/ProductDetails";
+import CategoryProducts from "../Components/CategoryProducts/CategoryProducts";
+import SearchResults from "../Components/SearchResults/SearchResults";
+import AllProducts from "../Pages/AllProducts/AllProducts";
+
+/* ================= USER ================= */
 import WishList from "../Pages/HomePage/WishList/WishList";
 import Cart from "../Pages/HomePage/Cart/Cart";
 import Checkout from "../Components/Checkout/Checkout";
-import SuccessPage from "../Components/SuccessPage/SuccessPage";
 import SingleCheckout from "../Components/Checkout/SingleCheckout";
-import CategoryProducts from "../Components/CategoryProducts/CategoryProducts";
-import SearchResults from "../Components/SearchResults/SearchResults";
-import ManageProducts from "../Pages/Dashboard/AdminPages/ManageProducts/ManageProducts";
-import EditeProducts from "../Pages/Dashboard/AdminPages/ManageProducts/EditeProducts";
+import SuccessPage from "../Components/SuccessPage/SuccessPage";
 import MyOrders from "../Pages/Dashboard/UsersPages/MyOrders/MyOrders";
+
+/* ================= ADMIN ================= */
 import AddProduct from "../Pages/Dashboard/AdminPages/AddProduct/AddProduct";
 import Inventory from "../Pages/Dashboard/AdminPages/Inventory/Inventory";
 import EditProduct from "../Pages/Dashboard/AdminPages/Inventory/EditeProduct";
-import AllProducts from "../Pages/AllProducts/AllProducts";
+import ManageOrders from "../Pages/Dashboard/AdminPages/ManageOrders/ManageOrders";
+import OrderDetails from "../Pages/Dashboard/AdminPages/ManageOrders/OrderDetails";
 
-
+/* ================= ROUTE GUARDS ================= */
+import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
+import ChangePassword from "../Pages/ChangePassword/ChangePassword";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Main />,
     children: [
+      /* ============ PUBLIC ROUTES ============ */
+      { index: true, element: <Home /> },
+      { path: "login", element: <LoginForm /> },
+      { path: "sign-up", element: <SignupFrom /> },
+      { path: "product-details/:id", element: <ProductDetails /> },
+      { path: "category/:category", element: <CategoryProducts /> },
+      { path: "search", element: <SearchResults /> },
+      { path: "all-products", element: <AllProducts /> },
+
+      /* ============ USER PRIVATE ============ */
       {
-        index: true,
-        element: <Home />,
+        path: "wishlist",
+        element: (
+          <PrivateRoute>
+            <WishList />
+          </PrivateRoute>
+        ),
       },
       {
-        path: "login",
-        element: <LoginForm />,
+        path: "cart",
+        element: (
+          <PrivateRoute>
+            <Cart />
+          </PrivateRoute>
+        ),
       },
       {
-        path: "sign-up",
-        element: <SignupFrom />,
+        path: "checkout",
+        element: (
+          <PrivateRoute>
+            <Checkout />
+          </PrivateRoute>
+        ),
       },
       {
-        path: '/product-details/:id',
-        element: <ProductDetails></ProductDetails>
+        path: "single-checkout",
+        element: (
+          <PrivateRoute>
+            <SingleCheckout />
+          </PrivateRoute>
+        ),
       },
       {
-        path: '/wishlist',
-        element: <WishList></WishList>
+        path: "success",
+        element: (
+          <PrivateRoute>
+            <SuccessPage />
+          </PrivateRoute>
+        ),
       },
       {
-        path: '/cart',
-        element: <Cart></Cart>
+        path: "purchase-history",
+        element: (
+          <PrivateRoute>
+            <MyOrders />
+          </PrivateRoute>
+        ),
       },
       {
-        path: '/checkout',
-        element: <Checkout></Checkout>
+        path: "change-password",
+        element: (
+          <PrivateRoute>
+            <ChangePassword />
+          </PrivateRoute>
+        ),
+      },
+
+      /* ============ ADMIN PRIVATE ============ */
+      {
+        path: "add-products",
+        element: (
+          <AdminRoute>
+            <AddProduct />
+          </AdminRoute>
+        ),
       },
       {
-        path: '/single-checkout',
-        element: <SingleCheckout></SingleCheckout>
+        path: "inventory",
+        element: (
+          <AdminRoute>
+            <Inventory />
+          </AdminRoute>
+        ),
       },
       {
-        path: '/success',
-        element: <SuccessPage></SuccessPage>
+        path: "edit-products/:id",
+        element: (
+          <AdminRoute>
+            <EditProduct />
+          </AdminRoute>
+        ),
       },
       {
-        path: "/category/:category",
-        element: <CategoryProducts />,
+        path: "manage-orders",
+        element: (
+          <AdminRoute>
+            <ManageOrders />
+          </AdminRoute>
+        ),
       },
       {
-        path: "/search",
-        element: <SearchResults />,
+        path: "manage-orders/:id",
+        element: (
+          <AdminRoute>
+            <OrderDetails />
+          </AdminRoute>
+        ),
       },
-      {
-        path: "/purchase-history",
-        element: <MyOrders></MyOrders>
-      },
-      {
-        path: "/add-products",
-        element: <AddProduct></AddProduct>
-      },
-      {
-        path: "/inventory",
-        element: <Inventory></Inventory>
-      },
-      {
-        path: "/edit-products/:id",
-        element: <EditProduct></EditProduct>
-      },
-      {
-        path:'/all-products',
-        element:<AllProducts></AllProducts>
-      }
     ],
   },
-
-  // {
-  //   path: "/dashboard",
-  //   element: <Dashboard />,
-  //   children: [
-  //     {
-  //       path: "add-product",
-  //       element: <AddProducts />,
-  //     },
-  //     {
-  //       path: '/dashboard/manage-products',
-  //       element: <ManageProducts></ManageProducts>
-  //     },
-  //     {
-  //       path: "edit-products/:id",
-  //       element: <EditeProducts />,
-  //     },
-  //   ],
-  // },
 ]);

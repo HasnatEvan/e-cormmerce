@@ -10,20 +10,18 @@ const SingleCheckout = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
-  // 🔥 product state from navigate
   const product = state?.product || null;
 
-  /* =====================
-     STATES
-  ===================== */
   const [orderLoading, setOrderLoading] = useState(false);
 
+  // User info
   const [phone, setPhone] = useState("");
   const [district, setDistrict] = useState("");
   const [areaType, setAreaType] = useState("inside");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Payment
   const [paymentMethod, setPaymentMethod] = useState("bkash");
   const [trxId, setTrxId] = useState("");
 
@@ -33,12 +31,10 @@ const SingleCheckout = () => {
   const NAGAD_NUMBER = "01822-XXXXXX";
 
   /* =====================
-     SAFETY REDIRECT
+     SAFETY
   ===================== */
   useEffect(() => {
-    if (!product) {
-      navigate("/");
-    }
+    if (!product) navigate("/");
   }, [product, navigate]);
 
   if (!product) return null;
@@ -78,12 +74,9 @@ const SingleCheckout = () => {
 
     setOrderLoading(true);
 
-    // 🔥 DEBUG (optional)
-    console.log("PRODUCT STATE:", product);
-
-    // ✅ FIXED: size & color added
     const orderData = {
       userEmail: user.email,
+      userName: user.displayName || user.name || "Guest User",
       phone,
       district,
       areaType,
@@ -96,6 +89,7 @@ const SingleCheckout = () => {
           name: product.name,
           price: product.price,
           quantity: product.quantity,
+          image: product.image,
           color: product.selectedColor || null,
           size: product.selectedSize || null,
         },
@@ -111,16 +105,12 @@ const SingleCheckout = () => {
       orderTime: new Date(),
     };
 
-    console.log("ORDER DATA:", orderData);
-
     try {
       const res = await axiosSecure.post("/orders", orderData);
 
       if (res.data.success) {
-        setTimeout(() => {
-          toast.success("Order placed successfully ✅");
-          navigate("/success");
-        }, 2000);
+        toast.success("Order placed successfully 🎉");
+        navigate("/success");
       } else {
         setOrderLoading(false);
       }
@@ -132,31 +122,38 @@ const SingleCheckout = () => {
     }
   };
 
+  /* =====================
+     UI HELPERS
+  ===================== */
   const inputClass = (field) =>
     `w-full px-3 py-2 rounded border ${
-      errors[field] ? "border-red-500" : "border-gray-300"
-    }`;
+      errors[field] ? "border-red-500" : "border-blue-400"
+    } focus:outline-none focus:border-blue-600`;
 
   const paymentBox = (active) =>
     `border rounded p-3 cursor-pointer transition ${
       active
-        ? "bg-blue-50 border-blue-500"
-        : "border-gray-300 hover:bg-gray-50"
+        ? "bg-blue-50 border-blue-600"
+        : "border-blue-300 hover:bg-blue-50"
     }`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold mb-6">Checkout</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-blue-600">
+        Checkout
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* LEFT */}
-        <div className="md:col-span-2 bg-white border border-gray-300 rounded-lg p-6 space-y-5">
-          <h3 className="text-lg font-semibold">Shipping Details</h3>
+        <div className="md:col-span-2 bg-white border border-blue-400 rounded-lg p-6 space-y-5">
+          <h3 className="text-lg font-semibold text-blue-600">
+            Shipping Details
+          </h3>
 
           <input
             value={user?.email || ""}
             disabled
-            className="w-full border border-gray-300 px-3 py-2 rounded bg-gray-100"
+            className="w-full border border-blue-300 px-3 py-2 rounded bg-blue-50"
           />
 
           <input
@@ -168,13 +165,13 @@ const SingleCheckout = () => {
 
           <input
             className={inputClass("district")}
-            placeholder="Type your district"
+            placeholder="District"
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
           />
 
           <select
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className="w-full border border-blue-400 px-3 py-2 rounded focus:border-blue-600"
             value={areaType}
             onChange={(e) => setAreaType(e.target.value)}
           >
@@ -185,35 +182,37 @@ const SingleCheckout = () => {
           <textarea
             rows="3"
             className={inputClass("address")}
-            placeholder="Full delivery address"
+            placeholder="Full address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
 
           <textarea
             rows="2"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className="w-full border border-blue-400 px-3 py-2 rounded focus:border-blue-600"
             placeholder="Order notes (optional)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
 
-          <h3 className="text-lg font-semibold">Payment Method</h3>
+          <h3 className="text-lg font-semibold text-blue-600">
+            Payment Method
+          </h3>
 
           <div
             className={paymentBox(paymentMethod === "bkash")}
             onClick={() => setPaymentMethod("bkash")}
           >
-            <p className="font-medium">bKash (Send Money)</p>
-            <p className="text-sm mt-1 font-semibold">{BKASH_NUMBER}</p>
+            <p className="font-medium">bKash</p>
+            <p className="text-sm font-semibold">{BKASH_NUMBER}</p>
           </div>
 
           <div
             className={paymentBox(paymentMethod === "nagad")}
             onClick={() => setPaymentMethod("nagad")}
           >
-            <p className="font-medium">Nagad (Send Money)</p>
-            <p className="text-sm mt-1 font-semibold">{NAGAD_NUMBER}</p>
+            <p className="font-medium">Nagad</p>
+            <p className="text-sm font-semibold">{NAGAD_NUMBER}</p>
           </div>
 
           <p className="text-sm text-red-600">
@@ -229,26 +228,38 @@ const SingleCheckout = () => {
         </div>
 
         {/* RIGHT */}
-        <div className="bg-white border border-gray-300 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-1">Order Summary</h3>
+        <div className="bg-white border border-blue-400 rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-2 text-blue-600">
+            Order Summary
+          </h3>
 
           <p className="text-sm text-gray-500 mb-3">
             Total Quantity: {totalQuantity}
           </p>
 
-          <div className="flex justify-between text-sm mb-2">
-            <span className="truncate max-w-[200px] font-medium">
-              {product.name}{" "}
-              <span className="text-gray-500">
-                (x{product.quantity})
-              </span>
+          <div className="flex gap-3 items-center border-b border-blue-200 py-2">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-12 h-12 object-cover rounded border border-blue-300"
+            />
+
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                {product.name} × {product.quantity}
+              </p>
+              <p className="text-xs text-gray-500">
+                {product.selectedColor && `Color: ${product.selectedColor}`}{" "}
+                {product.selectedSize && `| Size: ${product.selectedSize}`}
+              </p>
+            </div>
+
+            <span className="text-sm font-semibold">
+              ৳ {subTotal}
             </span>
-            <span className="font-medium">৳ {subTotal}</span>
           </div>
 
-          <hr className="my-3" />
-
-          <div className="flex justify-between font-semibold text-lg">
+          <div className="flex justify-between font-semibold text-lg mt-4">
             <span>Total</span>
             <span>৳ {totalPrice}</span>
           </div>
@@ -256,13 +267,9 @@ const SingleCheckout = () => {
           <button
             onClick={handlePlaceOrder}
             disabled={orderLoading}
-            className="w-full mt-4 bg-red-600 text-white py-2 rounded hover:bg-red-700 flex items-center justify-center disabled:opacity-70"
+            className="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-70"
           >
-            {orderLoading ? (
-              <span className="loading loading-infinity loading-xl"></span>
-            ) : (
-              "PLACE ORDER"
-            )}
+            {orderLoading ? "Processing..." : "PLACE ORDER"}
           </button>
         </div>
       </div>

@@ -9,6 +9,10 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import axios from "axios";
 import { app } from "../Firebase/firebase.config";
@@ -47,12 +51,41 @@ const AuthProviders = ({ children }) => {
     return signOut(auth);
   };
 
-  // ✅ Update Firebase profile (ONLY supported fields)
+  // Update Firebase profile (name & photo)
   const updateUserProfile = (name, photoURL = null) => {
     return updateProfile(auth.currentUser, {
       displayName: name,
       photoURL,
     });
+  };
+
+  /* =====================
+     PASSWORD RESET (email link)
+  ===================== */
+  const resetPasswordByEmail = (email) => {
+    setLoading(true);
+    return sendPasswordResetEmail(auth, email);
+  };
+
+  /* =====================
+     CHANGE PASSWORD (while logged in)
+  ===================== */
+  const changeUserPassword = async (currentPassword, newPassword) => {
+    if (!auth.currentUser?.email) {
+      throw new Error("No logged-in user found");
+    }
+
+    // Create credential using email + current password
+    const credential = EmailAuthProvider.credential(
+      auth.currentUser.email,
+      currentPassword
+    );
+
+    // Re-authenticate (Firebase security rule)
+    await reauthenticateWithCredential(auth.currentUser, credential);
+
+    // Update password
+    return updatePassword(auth.currentUser, newPassword);
   };
 
   /* =====================
@@ -63,7 +96,7 @@ const AuthProviders = ({ children }) => {
       setUser(currentUser);
 
       if (currentUser?.email) {
-        // ✅ Get JWT token
+        // Get JWT token
         try {
           await axios.post(
             "http://localhost:5000/jwt",
@@ -74,7 +107,7 @@ const AuthProviders = ({ children }) => {
           console.error("JWT error:", error.message);
         }
       } else {
-        // ✅ Remove JWT cookie
+        // Remove JWT cookie
         try {
           await axios.get("http://localhost:5000/logout", {
             withCredentials: true,
@@ -101,6 +134,8 @@ const AuthProviders = ({ children }) => {
     signInWithGoogle,
     logOut,
     updateUserProfile,
+    resetPasswordByEmail,   // 🔹 Forgot password
+    changeUserPassword,     // 🔹 Change password
   };
 
   return (

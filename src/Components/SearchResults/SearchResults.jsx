@@ -19,24 +19,27 @@ const SearchResults = () => {
     },
   });
 
+  /* =====================
+     LOADING STATE
+  ===================== */
   if (isLoading) {
     return (
-      <p className="text-center py-20 text-gray-500">
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
         Searching products...
-      </p>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen max-w-7xl mx-auto px-4 py-8">
       <h2 className="text-xl font-semibold mb-6">
         Search Results for "{query}"
       </h2>
 
       {products.length === 0 ? (
-        <p className="text-gray-400 text-center">
+        <div className="flex items-center justify-center h-[60vh] text-gray-400">
           No products found
-        </p>
+        </div>
       ) : (
         <div
           className="
