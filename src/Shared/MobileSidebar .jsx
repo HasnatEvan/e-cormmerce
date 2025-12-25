@@ -30,7 +30,7 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
   const pages = [
     { name: "All Products", path: "/all-products" },
     { name: "About Us", path: "/about" },
-    { name: "Contact Us", path: "/contact" },
+    { name: "Contact Us", path: "/contact-us" },
   ];
 
   const isActivePage = (path) => location.pathname === path;

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaRegHeart, FaShoppingCart, FaArrowRight } from "react-icons/fa";
+import { FaShoppingCart, FaArrowRight } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import useAxiosPublic from "../../Hooks/useAxiosPublic";
 import useAxiosSecure from "../../Hooks/useAxiosSecure";
 import useAuth from "../../Hooks/useAuth";
+import QuestionForm from "../QuestionFrom/QuestionFrom";
+
+// your Card component
+import Card from "../Card/Card";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -17,14 +21,16 @@ const ProductDetails = () => {
 
   const [product, setProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("Description");
+
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [loadingCart, setLoadingCart] = useState(false);
 
-  /* =====================
-     FETCH PRODUCT
-  ===================== */
+  // ⭐ Related products state
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  // ---------- LOAD MAIN PRODUCT ----------
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -38,17 +44,37 @@ const ProductDetails = () => {
     loadProduct();
   }, [id, axiosPublic]);
 
+  // ---------- LOAD RELATED PRODUCTS ----------
+  useEffect(() => {
+    if (!product?.category) return;
+
+    const loadRelated = async () => {
+      try {
+        const res = await axiosPublic.get(`/products`);
+
+        // same category + not same product
+        const filtered = res.data.filter(
+          (p) => p.category === product.category && p._id !== product._id
+        );
+
+        setRelatedProducts(filtered);
+      } catch {
+        console.log("related products failed");
+      }
+    };
+
+    loadRelated();
+  }, [product, axiosPublic]);
+
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500 text-lg">
-          Loading product...
-        </p>
+        <p className="text-gray-500">Loading product...</p>
       </div>
     );
   }
 
-
+  // ---------- DESTRUCTURE ----------
   const {
     _id,
     name,
@@ -60,14 +86,13 @@ const ProductDetails = () => {
     images,
     colors,
     sizes,
+    // category,
     keyFeatures = [],
   } = product;
 
   const isOutOfStock = quantity <= 0;
 
-  /* =====================
-     COMMON VALIDATION
-  ===================== */
+  // ---------- VALIDATION ----------
   const validateAction = () => {
     if (isOutOfStock) {
       toast.error("Product is out of stock");
@@ -93,9 +118,7 @@ const ProductDetails = () => {
     return true;
   };
 
-  /* =====================
-     ADD TO CART
-  ===================== */
+  // ---------- ADD TO CART ----------
   const handleAddToCart = async () => {
     if (!validateAction()) return;
 
@@ -122,9 +145,7 @@ const ProductDetails = () => {
     }
   };
 
-  /* =====================
-     BUY NOW
-  ===================== */
+  // ---------- BUY NOW ----------
   const handleBuyNow = () => {
     if (!validateAction()) return;
 
@@ -144,40 +165,13 @@ const ProductDetails = () => {
     });
   };
 
-  /* =====================
-     ADD TO WISHLIST
-  ===================== */
-  const handleAddToWishlist = async () => {
-    if (!user) {
-      toast.warning("Please login first");
-      navigate("/login");
-      return;
-    }
-
-    try {
-      await axiosSecure.post("/wishlists", {
-        productId: _id,
-        name,
-        image: selectedImage,
-        price: finalAmount,
-        userEmail: user.email,
-      });
-      toast.success("Added to wishlist");
-    } catch (err) {
-      if (err.response?.status === 409) {
-        toast.info("Already in wishlist");
-      } else {
-        toast.error("Wishlist failed");
-      }
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-3 py-6">
-      {/* ================= MAIN GRID ================= */}
+
+      {/* ---------- PRODUCT TOP GRID ---------- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Images */}
+        {/* IMAGE SECTION */}
         <div>
           <img
             src={selectedImage}
@@ -200,17 +194,17 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/* Details */}
+        {/* TEXT SECTION */}
         <div>
           <h2 className="text-2xl md:text-3xl font-bold">{name}</h2>
 
-          {/* 🔑 Key Features */}
+          {/* Key Features */}
           {keyFeatures.length > 0 && (
             <div className="mt-3">
               <h4 className="font-semibold mb-1">Key Features</h4>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                {keyFeatures.slice(0, 5).map((feature, index) => (
-                  <li key={index}>{feature}</li>
+                {keyFeatures.slice(0, 5).map((f, i) => (
+                  <li key={i}>{f}</li>
                 ))}
               </ul>
             </div>
@@ -221,16 +215,16 @@ const ProductDetails = () => {
             <div className="mt-4">
               <h4 className="font-semibold mb-1">Color</h4>
               <div className="flex gap-2 flex-wrap">
-                {colors.map((color) => (
+                {colors.map((c) => (
                   <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-3 py-1 border rounded ${selectedColor === color
+                    key={c}
+                    onClick={() => setSelectedColor(c)}
+                    className={`px-3 py-1 border rounded ${selectedColor === c
                         ? "border-blue-500 bg-blue-50"
                         : ""
                       }`}
                   >
-                    {color}
+                    {c}
                   </button>
                 ))}
               </div>
@@ -242,46 +236,36 @@ const ProductDetails = () => {
             <div className="mt-4">
               <h4 className="font-semibold mb-1">Size</h4>
               <div className="flex gap-2 flex-wrap">
-                {sizes.map((size) => (
+                {sizes.map((s) => (
                   <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-3 py-1 border rounded ${selectedSize === size
+                    key={s}
+                    onClick={() => setSelectedSize(s)}
+                    className={`px-3 py-1 border rounded ${selectedSize === s
                         ? "border-blue-500 bg-blue-50"
                         : ""
                       }`}
                   >
-                    {size}
+                    {s}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Stock + Wishlist */}
-          <div className="mt-4 flex justify-between items-center border-b pb-2">
-            <span
-              className={`font-semibold ${isOutOfStock ? "text-red-600" : "text-green-600"
-                }`}
-            >
-              {isOutOfStock ? "Out of Stock" : `Stock: ${quantity}`}
-            </span>
-
-            <button
-              onClick={handleAddToWishlist}
-              className="border px-3 py-1 rounded-full flex items-center gap-2"
-            >
-              <FaRegHeart /> Wishlist
-            </button>
+          {/* Stock */}
+          <div className="mt-4 font-semibold">
+            {isOutOfStock ? (
+              <span className="text-red-600">Out of Stock</span>
+            ) : (
+              <span className="text-green-600">Stock: {quantity}</span>
+            )}
           </div>
 
           {/* Price */}
           <div className="mt-5">
             <p className="line-through text-gray-400">৳ {price}</p>
             <p className="text-3xl font-bold">৳ {finalAmount}</p>
-            <p className="text-sm text-green-600">
-              You save {discount}%
-            </p>
+            <p className="text-sm text-green-600">You save {discount}%</p>
           </div>
 
           {/* Buttons */}
@@ -289,7 +273,7 @@ const ProductDetails = () => {
             <button
               onClick={handleAddToCart}
               disabled={loadingCart}
-              className="border border-blue-500 text-blue-500 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50"
+              className="border border-blue-500 text-blue-500 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-blue-50"
             >
               <FaShoppingCart /> Add to Cart
             </button>
@@ -297,7 +281,7 @@ const ProductDetails = () => {
             <button
               onClick={handleBuyNow}
               disabled={loadingCart}
-              className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-blue-700 disabled:bg-gray-400"
+              className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-blue-700"
             >
               Buy Now <FaArrowRight />
             </button>
@@ -305,9 +289,9 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* ---------- TABS ---------- */}
       <div className="mt-10">
-        <div className="flex gap-6 border-b">
+        <div className="flex gap-6 border-b border-gray-300">
           {["Description", "Questions"].map((tab) => (
             <button
               key={tab}
@@ -324,9 +308,24 @@ const ProductDetails = () => {
 
         <div className="mt-4 text-gray-700 whitespace-pre-line">
           {activeTab === "Description" && description}
-          {activeTab === "Questions" && <p>❓ No questions yet.</p>}
+          {activeTab === "Questions" && (
+            <QuestionForm productId={_id} productName={name} />
+          )}
         </div>
       </div>
+
+      {/* ---------- RELATED PRODUCTS ---------- */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-14">
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
+            {relatedProducts.map((item) => (
+              <Card key={item._id} product={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -31,6 +31,8 @@ import OrderDetails from "../Pages/Dashboard/AdminPages/ManageOrders/OrderDetail
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import ChangePassword from "../Pages/ChangePassword/ChangePassword";
+import Contact from "../Pages/ContactUs/Contact";
+import About from "../Pages/About/About";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +47,8 @@ export const router = createBrowserRouter([
       { path: "category/:category", element: <CategoryProducts /> },
       { path: "search", element: <SearchResults /> },
       { path: "all-products", element: <AllProducts /> },
+      { path: "contact-Us", element: <Contact /> },
+      { path: "about", element: <About /> },
 
       /* ============ USER PRIVATE ============ */
       {

@@ -174,8 +174,8 @@ const MainNavbar = () => {
           <div className="hidden md:flex items-center gap-6 ml-8">
             <NavLink to="/" className={({ isActive }) => isActive ? activeClass : normalClass}>Home</NavLink>
             <NavLink to="/all-Products" className={({ isActive }) => isActive ? activeClass : normalClass}>All Prodcuts</NavLink>
-            <NavLink to="/trending" className={({ isActive }) => isActive ? activeClass : normalClass}>Trending</NavLink>
-            <NavLink to="/brands" className={({ isActive }) => isActive ? activeClass : normalClass}>Brands</NavLink>
+            <NavLink to="/contact-Us" className={({ isActive }) => isActive ? activeClass : normalClass}>Contsct Us</NavLink>
+            <NavLink to="/about" className={({ isActive }) => isActive ? activeClass : normalClass}>About</NavLink>
             <NavLink to="/outlets" className={({ isActive }) => isActive ? activeClass : normalClass}>Outlets</NavLink>
           </div>
         </div>
