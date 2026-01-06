@@ -1,4 +1,3 @@
-import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -7,81 +6,157 @@ import useAuth from "../Hooks/useAuth";
 const LoginForm = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [errors, setErrors] = useState({});
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    const form = event.target;
-    const emailOrPhone = form.emailOrPhone.value;
-    const password = form.password.value;
 
+    const form = event.target;
+    const email = form.email.value.trim();
+    const password = form.password.value.trim();
+
+    let newErrors = {};
+
+    // ---------- VALIDATIONS ----------
+
+    if (!email) {
+      newErrors.email = "Email is required";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fix form errors");
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
+
+    // ---------- LOGIN ----------
     try {
-      await signIn(emailOrPhone, password); // Firebase বা Backend লগইন
+      await signIn(email, password);
+
       toast.success("Login successful!");
-      navigate("/"); // হোম পেজে নেভিগেট
+
+      // ⏳ 4 seconds loading then redirect to Home
+      setTimeout(() => {
+        navigate("/");
+      }, 4000);
+
       form.reset();
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed: " + error.message);
+      console.error(error);
+
+      const msg = error?.message || "";
+
+      if (msg.includes("wrong-password") || msg.includes("invalid-credential")) {
+        toast.error("Incorrect password");
+      } else if (msg.includes("user-not-found")) {
+        toast.error("No account found with this email");
+      } else {
+        toast.error("Enter valid email and password");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center py-12 bg-gray-50">
-      <div className="bg-white shadow-lg hover:shadow-2xl transition-shadow duration-300 p-8 w-full max-w-sm">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-1 text-left">Log In</h2>
-        <hr className="mb-6 text-gray-200" />
+    <div className="min-h-screen flex justify-center items-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
 
-        <form onSubmit={handleLogin}>
-          {/* Phone or Email */}
-          <input
-            name="emailOrPhone"
-            type="text"
-            placeholder="Phone or Email address"
-            className="w-full bg-gray-100 border border-gray-300 px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+        <h2 className="text-3xl font-bold text-blue-700 text-center mb-1">
+          Log In
+        </h2>
 
-          {/* Password */}
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            className="w-full bg-gray-100 border border-gray-300 px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+        <p className="text-center text-gray-500 mb-6">
+          Welcome back! Please enter your details
+        </p>
 
-          {/* Login Button */}
-         <button
-  type="submit"
-  className="w-full bg-blue-500 text-white py-2 rounded-full font-medium hover:bg-blue-600 transition flex justify-center items-center gap-2"
->
-  {loading && <span className="loading loading-infinity loading-2xl"></span>}
-  Log In
-</button>
+        <form onSubmit={handleLogin} className="space-y-4">
 
+          {/* EMAIL */}
+          <div>
+            <label className="text-sm font-semibold text-blue-700">
+              Email Address
+            </label>
+
+            <input
+              name="email"
+              type="email"
+              placeholder="Enter email address"
+              className="mt-1 w-full bg-white border border-blue-400 px-4 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email}</p>
+            )}
+          </div>
+
+          {/* PASSWORD */}
+          <div className="relative">
+            <label className="text-sm font-semibold text-blue-700">
+              Password
+            </label>
+
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="mt-1 w-full bg-white border border-blue-400 px-4 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-9 text-blue-600 text-sm cursor-pointer"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </span>
+
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password}</p>
+            )}
+          </div>
+
+          {/* LOGIN BUTTON */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-2 rounded-full font-semibold flex justify-center items-center gap-2"
+          >
+            {loading && (
+              <span className="loading loading-infinity loading-lg"></span>
+            )}
+            Log In
+          </button>
         </form>
 
+        {/* Forgot password */}
         <div className="text-center mt-3">
-          <Link to="/forgot-password" className="text-sm text-blue-500 hover:underline">
+          <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
             Forgotten password?
           </Link>
         </div>
 
-        {/* Google Login */}
-        <button className="w-full mt-4 flex items-center justify-center gap-2 border border-blue-400 text-blue-500 py-2 rounded-full font-medium hover:bg-blue-50 transition">
-          <FcGoogle className="text-xl" />
-          Login with Google
-        </button>
-
-        {/* Signup Link */}
+        {/* Signup link */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          Doesn&apos;t have any account?{" "}
-          <Link to="/sign-up" className="text-blue-500 font-medium hover:underline">
-            Sign Up Now.
+          Don’t have an account?
+          <Link to="/sign-up" className="text-blue-700 font-semibold hover:underline ml-1">
+            Sign up now
           </Link>
         </p>
       </div>

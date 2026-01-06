@@ -91,37 +91,38 @@ const AuthProviders = ({ children }) => {
   /* =====================
      AUTH STATE OBSERVER
   ===================== */
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const fetchJWT = async () => {
+      try {
+        if (currentUser?.email) {
+          setUser(currentUser);
 
-      if (currentUser?.email) {
-        // Get JWT token
-        try {
           await axios.post(
-            "http://localhost:5000/jwt",
+            "https://server.fastforwardlogistics.org/jwt",
             { email: currentUser.email },
             { withCredentials: true }
           );
-        } catch (error) {
-          console.error("JWT error:", error.message);
+        } else {
+          setUser(null);
+
+          await axios.get(
+            "https://server.fastforwardlogistics.org/logout",
+            { withCredentials: true }
+          );
         }
-      } else {
-        // Remove JWT cookie
-        try {
-          await axios.get("http://localhost:5000/logout", {
-            withCredentials: true,
-          });
-        } catch (error) {
-          console.error("Logout error:", error.message);
-        }
+      } catch (err) {
+        console.log("JWT auth error →", err?.response || err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setLoading(false);
-    });
+    fetchJWT();
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
   /* =====================
      CONTEXT VALUE

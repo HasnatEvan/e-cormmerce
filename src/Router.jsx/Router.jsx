@@ -33,6 +33,7 @@ import AdminRoute from "./AdminRoute";
 import ChangePassword from "../Pages/ChangePassword/ChangePassword";
 import Contact from "../Pages/ContactUs/Contact";
 import About from "../Pages/About/About";
+import ForgotPassword from "../Authentication/ForgotPassword";
 
 export const router = createBrowserRouter([
   {
@@ -107,6 +108,12 @@ export const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />
+      },
+
 
       /* ============ ADMIN PRIVATE ============ */
       {

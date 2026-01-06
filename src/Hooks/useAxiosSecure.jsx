@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import useAuth from './useAuth'
 
 export const axiosSecure = axios.create({
-  baseURL: 'http://localhost:5000',  // Corrected URL format
+  baseURL: 'https://server.fastforwardlogistics.org',  
   withCredentials: true,
 })
 
 const useAxiosSecure = () => {
   const navigate = useNavigate()
   const { logOut } = useAuth()
-  
+
   useEffect(() => {
     axiosSecure.interceptors.response.use(
       res => {

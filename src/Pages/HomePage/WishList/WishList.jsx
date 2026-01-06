@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Sidebar from "../../../Components/Sidebar/Sidebar";
 import useAxiosSecure from "../../../Hooks/useAxiosSecure";
@@ -10,34 +10,28 @@ import useAuth from "../../../Hooks/useAuth";
 const WishList = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-
-  const [wishlist, setWishlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   /* =====================
-     LOAD WISHLIST
+        LOAD WISHLIST
   ===================== */
-  useEffect(() => {
-    if (!user) return;
-
-    const loadWishlist = async () => {
-      try {
-        const res = await axiosSecure.get(
-          `/wishlists?email=${user.email}`
-        );
-        setWishlist(res.data);
-      } catch {
-        toast.error("Failed to load wishlist");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadWishlist();
-  }, [user, axiosSecure]);
+  const {
+    data: wishlist = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    enabled: !!user?.email, // wait until user loaded
+    queryKey: ["wishlist", user?.email],
+    queryFn: async () => {
+      const { data } = await axiosSecure.get(
+        `/wishlists?email=${user.email}`
+      );
+      return data;
+    },
+  });
 
   /* =====================
-     REMOVE ITEM
+        REMOVE ITEM
   ===================== */
   const handleRemove = async (productId) => {
     try {
@@ -45,11 +39,10 @@ const WishList = () => {
         `/wishlists?productId=${productId}&email=${user.email}`
       );
 
-      setWishlist((prev) =>
-        prev.filter((item) => item.productId !== productId)
-      );
-
       toast.success("Removed from wishlist");
+
+      // refresh wishlist automatically
+      queryClient.invalidateQueries(["wishlist", user?.email]);
     } catch {
       toast.error("Failed to remove item");
     }
@@ -67,19 +60,24 @@ const WishList = () => {
         {/* ================= MAIN ================= */}
         <main className="w-full md:w-3/4 flex flex-col min-h-[80vh]">
 
-          {/* ===== LOADING (CENTER) ===== */}
-          {loading && (
+          {/* ===== LOADING ===== */}
+          {isLoading && (
             <div className="flex flex-1 items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-gray-500 text-lg">
-                  Loading wishlist...
-                </p>
-              </div>
+              <p className="text-gray-500 text-lg">Loading wishlist...</p>
+            </div>
+          )}
+
+          {/* ===== ERROR ===== */}
+          {isError && (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-red-500 text-lg">
+                Failed to load wishlist
+              </p>
             </div>
           )}
 
           {/* ===== CONTENT ===== */}
-          {!loading && (
+          {!isLoading && !isError && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
                 Wishlist
@@ -93,7 +91,7 @@ const WishList = () => {
                 </div>
               ) : (
                 <>
-                  {/* ================= DESKTOP TABLE ================= */}
+                  {/* ================= DESKTOP ================= */}
                   <div className="hidden md:block">
                     <div className="grid grid-cols-12 border-b border-blue-500 pb-2 text-sm font-medium text-gray-500">
                       <div className="col-span-6">Product</div>
@@ -149,7 +147,7 @@ const WishList = () => {
                     ))}
                   </div>
 
-                  {/* ================= MOBILE VIEW ================= */}
+                  {/* ================= MOBILE ================= */}
                   <div className="md:hidden space-y-4">
                     {wishlist.map((item) => (
                       <div
@@ -201,7 +199,7 @@ const WishList = () => {
                 </>
               )}
 
-              {/* ================= CONTINUE SHOPPING ================= */}
+              {/* CONTINUE SHOPPING */}
               <div className="mt-auto pt-6">
                 <Link to="/products">
                   <button className="w-full border border-blue-500 py-2 text-blue-600 font-semibold hover:bg-blue-50 transition">
