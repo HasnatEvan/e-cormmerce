@@ -1,46 +1,129 @@
-import Image1 from "../../assets/Images/image1.jpg";
-import Image2 from "../../assets/Images/image2.jpg";
-import Image3 from "../../assets/Images/image3.jpg";
-import Image4 from "../../assets/Images/image4.jpg";
+import { useEffect, useState } from "react";
+import {
+  FaShoppingCart,
+  FaMoneyBillWave,
+  FaTruck,
+  FaLock,
+  FaPhoneAlt,
+  FaUndoAlt,
+  FaStar,
+} from "react-icons/fa";
+
+import Image1 from "../../assets/Images/image (1).jfif";
+import Image2 from "../../assets/Images/image (2).jfif";
+import Image3 from "../../assets/Images/image (3).jfif";
+import { Link } from "react-router-dom";
+
+
+const images = [Image1, Image2, Image3];
+const sliderImages = [...images, images[0]];
 
 const HeroSection = () => {
-  return (
-    <div className="grid grid-cols-5 gap-2 p-2 sm:p-4">
-      {/* Top Row */}
-      <div className="col-span-3">
-        <img
-          src={Image1}
-          alt="Banner 1"
-          className="w-full h-32 sm:h-52 md:h-72 lg:h-96 rounded-lg shadow-md object-cover"
-        />
-      </div>
-      <div className="col-span-2">
-        <img
-          src={Image2}
-          alt="Banner 2"
-          className="w-full h-32 sm:h-52 md:h-72 lg:h-96 rounded-lg shadow-md object-cover"
-        />
-      </div>
+  const [current, setCurrent] = useState(0);
+  const [transition, setTransition] = useState(true);
 
-      {/* Bottom Row (2 equal columns) */}
-      <div className="col-span-5 grid grid-cols-2 gap-2 ">
-        <div>
-          <img
-            src={Image3}
-            alt="Banner 3"
-            className="w-full h-24 sm:h-36 md:h-48 lg:h-60 rounded-lg shadow-md object-cover"
-          />
+  // Auto slide
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => prev + 1);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Infinite loop fix
+  useEffect(() => {
+    if (current === images.length) {
+      setTimeout(() => {
+        setTransition(false);
+        setCurrent(0);
+      }, 1200);
+    } else {
+      setTransition(true);
+    }
+  }, [current]);
+
+  return (
+    <div className="w-full p-2 sm:p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+
+        {/* SLIDER */}
+        <div
+          className="
+            lg:col-span-4 overflow-hidden rounded-lg
+            h-[180px] sm:h-[260px] md:h-[360px] lg:h-[420px]
+            
+          "
+        >
+          <div
+            className={`flex ${
+              transition
+                ? "transition-transform duration-[1200ms] ease-in-out"
+                : ""
+            }`}
+            style={{ transform: `translateX(-${current * 100}%)` }}
+          >
+            {sliderImages.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Banner ${index + 1}`}
+                className="
+                  w-full h-full flex-shrink-0
+                  object-contain lg:object-cover
+                "
+              />
+            ))}
+          </div>
         </div>
-        <div>
-          <img
-            src={Image4}
-            alt="Banner 4"
-            className="w-full h-24 sm:h-36 md:h-48 lg:h-60 rounded-lg shadow-md object-cover"
-          />
-        </div>
+
+        {/* INFO BOX (Desktop Only) */}
+ {/* INFO BOX (Desktop Only) */}
+<div className="hidden lg:flex lg:col-span-1 bg-white rounded-lg  p-3 flex-col gap-3 -mt-2">
+
+  {/* Title */}
+  <div className="border border-gray-300 rounded-md p-2">
+    <h3 className="text-sm font-semibold flex items-center gap-2">
+      <FaShoppingCart className="text-blue-600" />
+      Online Shopping
+    </h3>
+  </div>
+
+  {/* Features */}
+  <div className="border border-gray-300 rounded-md p-2 space-y-2 text-xs text-gray-700">
+    <Feature icon={<FaMoneyBillWave className="text-green-600" />} text="Cash on Delivery" />
+    <Feature icon={<FaTruck className="text-blue-600" />} text="Fast Delivery" />
+    <Feature icon={<FaLock className="text-purple-600" />} text="100% Secure Payment" />
+    <Feature icon={<FaPhoneAlt className="text-indigo-600" />} text="24/7 Customer Support" />
+    <Feature icon={<FaUndoAlt className="text-orange-600" />} text="Easy Return Policy" />
+    <Feature icon={<FaStar className="text-yellow-500" />} text="Trusted Quality Products" />
+  </div>
+
+  {/* Button */}
+  <div className="border border-blue-300 rounded-md p-2">
+   <Link to="/all-Products">
+  <button className="w-full bg-blue-600 text-white text-xs py-2 rounded-md hover:bg-blue-700 transition font-semibold">
+    Shop Now
+  </button>
+</Link>
+
+  </div>
+
+</div>
+
+
+
+
       </div>
     </div>
   );
 };
+
+/* Reusable Feature Component */
+const Feature = ({ icon, text }) => (
+  <div className="flex items-center gap-2 border border-gray-200 rounded p-1.5">
+    {icon}
+    <span>{text}</span>
+  </div>
+);
 
 export default HeroSection;

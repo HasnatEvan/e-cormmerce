@@ -89,61 +89,93 @@ const MyOrdersTable = ({ orders }) => {
       </div>
 
       {/* ================= MOBILE VIEW ================= */}
-      <div className="md:hidden space-y-4">
-        {sortedOrders.map((order) => (
+  {/* ================= MOBILE VIEW ================= */}
+<div className="md:hidden space-y-4">
+  {sortedOrders.map((order) => (
+    <div
+      key={order._id}
+      className="border border-blue-300 rounded-lg p-4 space-y-4"
+    >
+      {/* PRODUCTS */}
+      <div>
+        <p className="text-xs text-gray-500 mb-2">Products</p>
+
+        {order.items.map((item, index) => (
           <div
-            key={order._id}
-            className="border border-blue-300 rounded-lg p-4 space-y-3"
+            key={index}
+            className="flex items-start gap-3 mb-3"
           >
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Products</p>
-              {order.items.map((item, index) => (
-                <div key={index}>
-                  <p className="text-sm font-medium truncate">
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Qty: {item.quantity} | Color: {item.color || "N/A"} | Size:{" "}
-                    {item.size || "N/A"}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-between text-xs">
-              <span>Date</span>
-              <span>{formatDateTime(order.orderTime)}</span>
-            </div>
-
-            <div className="flex justify-between text-xs">
-              <span>Payment</span>
-              <span className="uppercase">{order.paymentMethod}</span>
-            </div>
-
-            <div className="flex justify-between text-xs">
-              <span>Status</span>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
-                  order.status
-                )}`}
+            {/* LEFT TEXT */}
+            <div className="flex-1">
+              <p
+                className="text-sm font-medium max-w-[160px]"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
               >
-                {order.status}
-              </span>
+                {item.name}
+              </p>
+
+              <p className="text-xs text-gray-500 mt-1">
+                Qty: {item.quantity} | Color: {item.color || "N/A"} | Size:{" "}
+                {item.size || "N/A"}
+              </p>
             </div>
 
-            <div className="flex justify-between font-semibold pt-2 border-t border-gray-300">
-              <span>Total</span>
-              <span className="text-red-600">
-                ৳ {order.totalPrice}
-              </span>
+            {/* RIGHT IMAGE */}
+            <div className="w-14 h-14 flex-shrink-0 border border-blue-600 rounded">
+              <img
+                src={item.image || "https://via.placeholder.com/80"}
+                alt={item.name}
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
         ))}
       </div>
 
+      {/* DATE */}
+      <div className="flex justify-between text-xs">
+        <span>Date</span>
+        <span>{formatDateTime(order.orderTime)}</span>
+      </div>
+
+      {/* PAYMENT */}
+      <div className="flex justify-between text-xs">
+        <span>Payment</span>
+        <span className="uppercase">{order.paymentMethod}</span>
+      </div>
+
+      {/* STATUS */}
+      <div className="flex justify-between text-xs">
+        <span>Status</span>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
+            order.status
+          )}`}
+        >
+          {order.status}
+        </span>
+      </div>
+
+      {/* TOTAL */}
+      <div className="flex justify-between font-semibold pt-2 border-t border-gray-300">
+        <span>Total</span>
+        <span className="text-red-600">
+          ৳ {order.totalPrice}
+        </span>
+      </div>
+    </div>
+  ))}
+</div>
+
+
       {/* ================= CONTINUE SHOPPING ================= */}
       <div className="mt-auto pt-6">
-        <Link to="/products">
+        <Link to="/all-products">
           <button className="w-full border border-blue-500 py-2 text-blue-600 font-semibold hover:bg-blue-50 transition">
             CONTINUE SHOPPING
           </button>

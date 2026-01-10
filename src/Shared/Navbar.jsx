@@ -5,12 +5,10 @@ import logo from "../../src/assets/Logo/logo.png";
 
 import useAuth from "../Hooks/useAuth";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
-import useAxiosSecure from "../Hooks/useAxiosSecure";
 
 const Navbar = () => {
   const { user, logOut } = useAuth();
   const axiosPublic = useAxiosPublic();
-  const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
 
   const [searchText, setSearchText] = useState("");
@@ -48,9 +46,7 @@ const Navbar = () => {
     const delay = setTimeout(async () => {
       try {
         setLoading(true);
-        const res = await axiosPublic.get(
-          `/products/search?q=${searchText}`
-        );
+        const res = await axiosPublic.get(`/products/search?q=${searchText}`);
         setSuggestions(res.data.slice(0, 6));
       } catch {
         setSuggestions([]);
@@ -74,20 +70,29 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ================= WISHLIST COUNT (FIXED) ================= */
+  /* ================= WISHLIST COUNT (AUTO UPDATE) ================= */
   useEffect(() => {
     if (!user?.email) {
       setWishlistCount(0);
       return;
     }
 
-    axiosSecure
-      .get(`/wishlists?email=${user.email}`)
-      .then((res) => {
-        setWishlistCount(res.data?.length || 0);
-      })
-      .catch(() => setWishlistCount(0));
-  }, [user, axiosSecure]);
+    const loadWishlistCount = () => {
+      axiosPublic
+        .get(`/wishlists?email=${user.email}`)
+        .then((res) => setWishlistCount(res.data?.length || 0))
+        .catch(() => setWishlistCount(0));
+    };
+
+    // first load
+    loadWishlistCount();
+
+    // listen wishlist update signal
+    window.addEventListener("wishlist-updated", loadWishlistCount);
+
+    return () =>
+      window.removeEventListener("wishlist-updated", loadWishlistCount);
+  }, [user, axiosPublic]);
 
   return (
     <nav className="w-full shadow bg-white px-3 sm:px-4 py-2">

@@ -20,38 +20,44 @@ const AllProducts = () => {
     refetchOnWindowFocus: false,
   });
 
-  /* ================= LOADING ================= */
+  /* ================= LOADING STATE ================= */
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500 text-lg">
-          Loading products...
-        </p>
+        <p className="text-gray-500 text-lg">Loading products...</p>
       </div>
     );
   }
 
-  /* ================= ERROR ================= */
+  /* ================= ERROR STATE ================= */
   if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500 text-lg">
-          Failed to load products
-        </p>
+        <p className="text-red-500 text-lg">Failed to load products</p>
       </div>
     );
   }
 
+  /* ================= EMPTY STATE ================= */
+  if (!isLoading && !isError && products.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-lg">No products found</p>
+      </div>
+    );
+  }
+
+  /* ================= DATA RENDER ================= */
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {products.map((product) => (
-            <Card key={product._id} product={product} />
-          ))}
-        </div>
+    <div className="py-6 min-h-screen">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {products.map((product) => (
+          <Card key={product._id} product={product} />
+        ))}
       </div>
     </div>
+  </div>
   );
 };
 

@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Sidebar from "../../../Components/Sidebar/Sidebar";
-import useAxiosSecure from "../../../Hooks/useAxiosSecure";
+import useAxiosPublic from "../../../Hooks/useAxiosPublic";
 import useAuth from "../../../Hooks/useAuth";
 
 const WishList = () => {
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
+  const axiosPublic = useAxiosPublic();
   const queryClient = useQueryClient();
 
   /* =====================
@@ -20,10 +20,10 @@ const WishList = () => {
     isLoading,
     isError,
   } = useQuery({
-    enabled: !!user?.email, // wait until user loaded
+    enabled: !!user?.email,
     queryKey: ["wishlist", user?.email],
     queryFn: async () => {
-      const { data } = await axiosSecure.get(
+      const { data } = await axiosPublic.get(
         `/wishlists?email=${user.email}`
       );
       return data;
@@ -33,20 +33,25 @@ const WishList = () => {
   /* =====================
         REMOVE ITEM
   ===================== */
-  const handleRemove = async (productId) => {
-    try {
-      await axiosSecure.delete(
-        `/wishlists?productId=${productId}&email=${user.email}`
-      );
+const handleRemove = async (productId) => {
+  try {
+    await axiosPublic.delete(
+      `/wishlists?productId=${productId}&email=${user.email}`
+    );
 
-      toast.success("Removed from wishlist");
+    toast.success("Removed from wishlist");
 
-      // refresh wishlist automatically
-      queryClient.invalidateQueries(["wishlist", user?.email]);
-    } catch {
-      toast.error("Failed to remove item");
-    }
-  };
+    // ⭐ instantly update navbar / badges
+    window.dispatchEvent(new Event("wishlist-updated"));
+
+    // 🔄 react-query refetch
+    queryClient.invalidateQueries(["wishlist", user?.email]);
+
+  } catch {
+    toast.error("Failed to remove item");
+  }
+};
+
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4 bg-white">
@@ -60,14 +65,12 @@ const WishList = () => {
         {/* ================= MAIN ================= */}
         <main className="w-full md:w-3/4 flex flex-col min-h-[80vh]">
 
-          {/* ===== LOADING ===== */}
           {isLoading && (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-gray-500 text-lg">Loading wishlist...</p>
             </div>
           )}
 
-          {/* ===== ERROR ===== */}
           {isError && (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-red-500 text-lg">
@@ -76,7 +79,6 @@ const WishList = () => {
             </div>
           )}
 
-          {/* ===== CONTENT ===== */}
           {!isLoading && !isError && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
@@ -199,7 +201,6 @@ const WishList = () => {
                 </>
               )}
 
-              {/* CONTINUE SHOPPING */}
               <div className="mt-auto pt-6">
                 <Link to="/products">
                   <button className="w-full border border-blue-500 py-2 text-blue-600 font-semibold hover:bg-blue-50 transition">

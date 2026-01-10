@@ -151,7 +151,6 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
                   </p>
                 </div>
 
-                {/* Change Password */}
                 <Link
                   to="/change-password"
                   onClick={() => setMenuOpen(false)}
@@ -160,7 +159,6 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
                   Change Password
                 </Link>
 
-                {/* Logout */}
                 <button
                   onClick={handleLogout}
                   className="block w-full py-2 text-sm text-red-600 border border-red-400 rounded-lg hover:bg-red-50"
@@ -177,7 +175,9 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
           <div className="flex flex-col px-4 py-4 space-y-2 text-sm overflow-y-auto h-[calc(100%-110px)]">
             {/* Categories */}
             <button
-              onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+              onClick={() =>
+                setMobileCategoriesOpen(!mobileCategoriesOpen)
+              }
               className="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-50"
             >
               <span>Categories</span>
@@ -190,21 +190,30 @@ const MobileSidebar = ({ menuOpen, setMenuOpen }) => {
 
             {mobileCategoriesOpen && (
               <ul className="ml-4 border-l pl-3 space-y-1 max-h-64 overflow-y-auto">
-                {categories.map((cat, idx) => (
-                  <li key={idx}>
-                    <Link
-                      to={`/category/${encodeURIComponent(cat.name)}`}
-                      onClick={() => setMenuOpen(false)}
-                      className={`block py-1 ${
-                        isActiveCategory(cat.name)
-                          ? "text-blue-600 font-semibold"
-                          : "text-gray-700"
-                      } hover:text-blue-600`}
-                    >
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
+
+                {/* 🔥 show message when no category */}
+                {categories.length === 0 && (
+                  <p className="text-sm text-gray-400 px-1 py-1">
+                    No categories available
+                  </p>
+                )}
+
+                {categories.length > 0 &&
+                  categories.map((cat, idx) => (
+                    <li key={idx}>
+                      <Link
+                        to={`/category/${encodeURIComponent(cat.name)}`}
+                        onClick={() => setMenuOpen(false)}
+                        className={`block py-1 ${
+                          isActiveCategory(cat.name)
+                            ? "text-blue-600 font-semibold"
+                            : "text-gray-700"
+                        } hover:text-blue-600`}
+                      >
+                        {cat.name}
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             )}
 

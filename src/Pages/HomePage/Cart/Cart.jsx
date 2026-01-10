@@ -5,15 +5,15 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Sidebar from "../../../Components/Sidebar/Sidebar";
 import useAuth from "../../../Hooks/useAuth";
-import useAxiosSecure from "../../../Hooks/useAxiosSecure";
+import useAxiosPublic from "../../../Hooks/useAxiosPublic";
 
 const Cart = () => {
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
+  const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
 
   const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(true);
+ const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   /* =====================
@@ -24,7 +24,7 @@ const Cart = () => {
 
     const loadCart = async () => {
       try {
-        const res = await axiosSecure.get(`/carts?email=${user.email}`);
+        const res = await axiosPublic.get(`/carts?email=${user.email}`);
         setCart(res.data);
       } catch {
         toast.error("Failed to load cart");
@@ -34,20 +34,25 @@ const Cart = () => {
     };
 
     loadCart();
-  }, [user, axiosSecure]);
+  }, [user, axiosPublic]);
 
   /* =====================
      REMOVE ITEM
   ===================== */
-  const handleRemove = async (id) => {
-    try {
-      await axiosSecure.delete(`/carts/${id}`);
-      setCart((prev) => prev.filter((item) => item._id !== id));
-      toast.success("Removed from cart");
-    } catch {
-      toast.error("Failed to remove item");
-    }
-  };
+const handleRemove = async (id) => {
+  try {
+    await axiosPublic.delete(`/carts/${id}`);
+
+    setCart((prev) => prev.filter((item) => item._id !== id));
+
+    // ⭐ instantly update cart badge everywhere
+    window.dispatchEvent(new Event("cart-updated"));
+
+    toast.success("Removed from cart");
+  } catch {
+    toast.error("Failed to remove item");
+  }
+};
 
   /* =====================
      UPDATE QUANTITY
@@ -61,7 +66,7 @@ const Cart = () => {
     }
 
     try {
-      await axiosSecure.patch(`/carts/${item._id}`, {
+      await axiosPublic.patch(`/carts/${item._id}`, {
         cartQuantity: newQty,
       });
 
@@ -88,29 +93,28 @@ const Cart = () => {
   /* =====================
      CHECKOUT
   ===================== */
-const handleCheckout = () => {
-  if (cart.length === 0) return;
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
 
-  setCheckoutLoading(true);
+    setCheckoutLoading(true);
 
-  setTimeout(() => {
-    navigate("/checkout", {
-      state: {
-        cartItems: cart.map(item => ({
-          productId: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.cartQuantity,
-          image: item.cartImage,   // ✅ IMAGE পাঠানো হচ্ছে
-          selectedColor: item.selectedColor,
-          selectedSize: item.selectedSize,
-          stock: item.quantity,
-        })),
-      },
-    });
-  }, 1000);
-};
-
+    setTimeout(() => {
+      navigate("/checkout", {
+        state: {
+          cartItems: cart.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.cartQuantity,
+            image: item.cartImage,
+            selectedColor: item.selectedColor,
+            selectedSize: item.selectedSize,
+            stock: item.quantity,
+          })),
+        },
+      });
+    }, 1000);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 bg-white">
@@ -124,13 +128,11 @@ const handleCheckout = () => {
         {/* ================= MAIN ================= */}
         <main className="w-full md:w-3/4 flex flex-col min-h-[80vh]">
 
-          {/* ===== LOADING (CENTER LIKE WISHLIST) ===== */}
+          {/* ===== LOADING ===== */}
           {loading && (
             <div className="flex flex-1 items-center justify-center">
               <div className="flex flex-col items-center gap-2">
-                <p className="text-gray-500 text-lg">
-                  Loading cart...
-                </p>
+                <p className="text-gray-500 text-lg">Loading cart...</p>
               </div>
             </div>
           )}
@@ -211,10 +213,7 @@ const handleCheckout = () => {
                                 toast.error("Stock limit reached ❌");
                                 return;
                               }
-                              updateQuantity(
-                                item,
-                                item.cartQuantity + 1
-                              );
+                              updateQuantity(item, item.cartQuantity + 1);
                             }}
                             className={`text-red-500 text-lg ${
                               item.cartQuantity >= item.quantity
@@ -329,7 +328,7 @@ const handleCheckout = () => {
                     ))}
                   </div>
 
-                  {/* ================= TOTAL ================= */}
+                  {/* ================= TOTAL SECTION ================= */}
                   <div className="mt-auto border border-blue-400 bg-blue-50 p-4">
                     <div className="flex justify-between mb-4">
                       <span className="font-semibold">
@@ -353,7 +352,7 @@ const handleCheckout = () => {
                 </>
               )}
 
-              <Link to="/products">
+              <Link to="/all-products">
                 <button className="w-full mt-3 border border-blue-500 py-2 text-blue-600 font-semibold hover:bg-blue-50">
                   CONTINUE SHOPPING
                 </button>

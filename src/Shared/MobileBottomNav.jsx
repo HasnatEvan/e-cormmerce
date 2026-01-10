@@ -12,42 +12,45 @@ import {
 
 import Sidebar from "./Sidbar";
 import useAuth from "../Hooks/useAuth";
-import useAxiosSecure from "../Hooks/useAxiosSecure";
+import useAxiosPublic from "../Hooks/useAxiosPublic";
 import useRole from "../Hooks/useRole";
 
 const MobileBottomNav = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
+  const axiosPublic = useAxiosPublic();
   const [role, roleLoading] = useRole();
 
   const [cartCount, setCartCount] = useState(0);
 
-  /* ================= CART COUNT ================= */
+  /* ================= CART COUNT (REALTIME AUTO UPDATE) ================= */
   useEffect(() => {
-    let ignore = false;
+    if (!user?.email || role === "admin") {
+      setCartCount(0);
+      return;
+    }
 
     const loadCartCount = async () => {
       try {
-        if (!user?.email || role === "admin") {
-          if (!ignore) setCartCount(0);
-          return;
-        }
-
-        const res = await axiosSecure.get(`/carts?email=${user.email}`);
-
-        if (!ignore) {
-          setCartCount(res.data?.length || 0);
-        }
+        const res = await axiosPublic.get(`/carts?email=${user.email}`);
+        setCartCount(res.data?.length || 0);
       } catch {
-        if (!ignore) setCartCount(0);
+        setCartCount(0);
       }
     };
 
+    // 🔹 first load
     loadCartCount();
-    return () => (ignore = true);
-  }, [user?.email, axiosSecure, role]);
+
+    // 🔹 realtime listen
+    const handler = () => loadCartCount();
+
+    window.addEventListener("cart-updated", handler);
+
+    return () => window.removeEventListener("cart-updated", handler);
+
+  }, [user?.email, axiosPublic, role]);
 
   if (roleLoading) return null;
 
@@ -60,7 +63,6 @@ const MobileBottomNav = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-md z-30 block md:hidden">
         <div className="flex justify-around items-center py-2">
 
-          {/* ================= ADMIN NAV ================= */}
           {role === "admin" ? (
             <>
               <Link to="/" className="flex flex-col items-center text-blue-600">
@@ -73,11 +75,9 @@ const MobileBottomNav = () => {
                 <span className="text-xs">Inventory</span>
               </Link>
 
-              {/* ⭐ Animated Shop Button ⭐ */}
               <Link
                 to="/all-products"
-                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 
-                           animate-bounce transition transform hover:scale-110"
+                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 animate-bounce"
               >
                 <ShoppingBag size={26} />
                 <span className="text-xs">Shop</span>
@@ -109,11 +109,9 @@ const MobileBottomNav = () => {
                 <span className="text-xs">Category</span>
               </button>
 
-              {/* ⭐ Animated Shop Button ⭐ */}
               <Link
                 to="/all-products"
-                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 
-                           animate-bounce transition transform hover:scale-110"
+                className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 animate-bounce"
               >
                 <ShoppingBag size={26} />
                 <span className="text-xs">Shop</span>
@@ -130,9 +128,9 @@ const MobileBottomNav = () => {
                 )}
               </Link>
 
-              <Link to="/profile" className="flex flex-col items-center text-blue-600">
+              <Link to="/purchase-history" className="flex flex-col items-center text-blue-600">
                 <User size={22} />
-                <span className="text-xs">Profile</span>
+                <span className="text-xs">Purchase</span>
               </Link>
             </>
           )}

@@ -9,14 +9,12 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
-import useAxiosSecure from "../Hooks/useAxiosSecure";
 import useAuth from "../Hooks/useAuth";
 import MobileSidebar from "./MobileSidebar ";
 
 const MainNavbar = () => {
   const { user } = useAuth();
   const axiosPublic = useAxiosPublic();
-  const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,7 +24,6 @@ const MainNavbar = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
 
-  /* ===== MOBILE SEARCH ===== */
   const [mobileSearch, setMobileSearch] = useState("");
   const [mobileSuggestions, setMobileSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,9 +42,9 @@ const MainNavbar = () => {
       .catch(() => setCategories([]));
   }, [axiosPublic]);
 
-  /* ================= Wishlist & Cart Count ================= */
+  /* ================= Wishlist & Cart Count (AUTO-UPDATE) ================= */
   useEffect(() => {
-    if (!user) {
+    if (!user?.email) {
       setWishlistCount(0);
       setCartCount(0);
       return;
@@ -56,19 +53,31 @@ const MainNavbar = () => {
     const loadCounts = async () => {
       try {
         const [wishlistRes, cartRes] = await Promise.all([
-          axiosSecure.get(`/wishlists?email=${user.email}`),
-          axiosSecure.get(`/carts?email=${user.email}`),
+          axiosPublic.get(`/wishlists?email=${user.email}`),
+          axiosPublic.get(`/carts?email=${user.email}`),
         ]);
 
-        setWishlistCount(wishlistRes.data.length);
-        setCartCount(cartRes.data.length);
+        setWishlistCount(wishlistRes.data?.length || 0);
+        setCartCount(cartRes.data?.length || 0);
       } catch {
-        console.error("Count load failed");
+        console.log("Count load failed");
       }
     };
 
+    // first load
     loadCounts();
-  }, [user, axiosSecure]);
+
+    // ⭐ realtime listeners
+    const handler = () => loadCounts();
+
+    window.addEventListener("wishlist-updated", handler);
+    window.addEventListener("cart-updated", handler);
+
+    return () => {
+      window.removeEventListener("wishlist-updated", handler);
+      window.removeEventListener("cart-updated", handler);
+    };
+  }, [user, axiosPublic]);
 
   /* ================= MOBILE LIVE SEARCH ================= */
   useEffect(() => {
@@ -94,7 +103,6 @@ const MainNavbar = () => {
     return () => clearTimeout(delay);
   }, [mobileSearch, axiosPublic]);
 
-  /* ================= MOBILE SEARCH SUBMIT ================= */
   const handleMobileSearch = () => {
     if (!mobileSearch.trim()) return;
 
@@ -105,21 +113,15 @@ const MainNavbar = () => {
   };
 
   const handleMobileKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleMobileSearch();
-    }
+    if (e.key === "Enter") handleMobileSearch();
   };
 
-  /* ================= Outside Click Close ================= */
+  /* ================= Outside Click ================= */
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        categoryRef.current &&
-        !categoryRef.current.contains(e.target)
-      ) {
+    const close = (e) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target)) {
         setCategoriesOpen(false);
       }
-
       if (
         mobileSearchRef.current &&
         !mobileSearchRef.current.contains(e.target)
@@ -128,19 +130,18 @@ const MainNavbar = () => {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
   }, []);
 
   return (
     <div className="w-full shadow-md bg-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
 
-        {/* ================= Left ================= */}
+        {/* ================= LEFT ================= */}
         <div className="flex items-center gap-6">
 
-          {/* Categories Dropdown (Desktop) */}
+          {/* Categories Dropdown */}
           <div ref={categoryRef} className="relative hidden md:block">
             <button
               onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -172,19 +173,22 @@ const MainNavbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6 ml-8">
-            <NavLink to="/" className={({ isActive }) => isActive ? activeClass : normalClass}>Home</NavLink>
-            <NavLink to="/all-Products" className={({ isActive }) => isActive ? activeClass : normalClass}>All Prodcuts</NavLink>
-            <NavLink to="/contact-Us" className={({ isActive }) => isActive ? activeClass : normalClass}>Contsct Us</NavLink>
-            <NavLink to="/about" className={({ isActive }) => isActive ? activeClass : normalClass}>About</NavLink>
-            <NavLink to="/outlets" className={({ isActive }) => isActive ? activeClass : normalClass}>Outlets</NavLink>
+            <NavLink to="/" className={({isActive}) => isActive ? activeClass : normalClass}>Home</NavLink>
+            <NavLink to="/all-Products" className={({isActive}) => isActive ? activeClass : normalClass}>All Products</NavLink>
+            <NavLink to="/contact-Us" className={({isActive}) => isActive ? activeClass : normalClass}>Contact Us</NavLink>
+            <NavLink to="/about" className={({isActive}) => isActive ? activeClass : normalClass}>About</NavLink>
+            <NavLink to="/outlets" className={({isActive}) => isActive ? activeClass : normalClass}>Outlets</NavLink>
           </div>
         </div>
 
-        {/* ================= Right (Desktop) ================= */}
+        {/* ================= RIGHT (DESKTOP) ================= */}
         <div className="hidden md:flex items-center gap-8">
+
+          {/* Wishlist */}
           <NavLink to="/wishlist" className="relative flex items-center gap-2 text-blue-500">
             <FaHeart className="text-xl" />
             <span className="text-sm">Wishlist</span>
+
             {wishlistCount > 0 && (
               <span className="absolute -top-3 -right-4 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
                 {wishlistCount}
@@ -192,9 +196,11 @@ const MainNavbar = () => {
             )}
           </NavLink>
 
+          {/* Cart */}
           <NavLink to="/cart" className="relative flex items-center gap-2 text-blue-500">
             <FaShoppingCart className="text-xl" />
             <span className="text-sm">Cart</span>
+
             {cartCount > 0 && (
               <span className="absolute -top-3 -right-4 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
                 {cartCount}
@@ -203,7 +209,7 @@ const MainNavbar = () => {
           </NavLink>
         </div>
 
-        {/* ================= Mobile ================= */}
+        {/* ================= MOBILE ================= */}
         <div
           className="md:hidden flex items-center gap-2 w-full"
           ref={mobileSearchRef}

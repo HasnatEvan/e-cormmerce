@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../../../Hooks/useAuth";
-import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
+import useAxiosPublic from "../../../../Hooks/useAxiosPublic";
 import Sidebar from "../../../../Components/Sidebar/Sidebar";
 import MyOrdersTable from "./MyOrdersTable";
 
 const MyOrders = () => {
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
+  const axiosPublic = useAxiosPublic();
 
   const {
     data: orders = [],
@@ -16,7 +16,7 @@ const MyOrders = () => {
     enabled: !!user?.email,
     queryKey: ["orders", user?.email],
     queryFn: async () => {
-      const { data } = await axiosSecure.get(
+      const { data } = await axiosPublic.get(
         `/customer-orders/${user.email}`
       );
       return data;
@@ -35,27 +35,21 @@ const MyOrders = () => {
         {/* ================= MAIN ================= */}
         <main className="w-full md:w-3/4 flex flex-col min-h-[80vh]">
 
-          {/* ===== LOADING (CENTER) ===== */}
+          {/* ===== LOADING STATE ===== */}
           {isLoading && (
             <div className="flex flex-1 items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-gray-500 text-lg">
-                  Loading orders...
-                </p>
-              </div>
+              <p className="text-gray-500 text-lg">Loading orders...</p>
             </div>
           )}
 
-          {/* ===== ERROR ===== */}
+          {/* ===== ERROR STATE ===== */}
           {isError && !isLoading && (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-red-500 text-lg">
-                Failed to load orders
-              </p>
+              <p className="text-red-500 text-lg">Failed to load orders</p>
             </div>
           )}
 
-          {/* ===== CONTENT ===== */}
+          {/* ===== SUCCESS CONTENT ===== */}
           {!isLoading && !isError && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">

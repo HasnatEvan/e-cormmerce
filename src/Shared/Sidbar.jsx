@@ -18,16 +18,14 @@ const Sidebar = ({ isOpen, onClose }) => {
   /* ================= Outside Click ================= */
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target)
-      ) {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         onClose();
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   /* ================= Body Scroll Lock ================= */
@@ -42,32 +40,38 @@ const Sidebar = ({ isOpen, onClose }) => {
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="font-bold text-lg text-blue-600">
-          Categories
-        </h2>
-        <button
-          onClick={onClose}
-          className="text-blue-600 font-bold"
-        >
+      <div className="flex justify-between items-center p-4 border-b border-blue-600">
+        <h2 className="font-bold text-lg text-blue-600">Categories</h2>
+
+        <button onClick={onClose} className="text-blue-600 font-bold">
           X
         </button>
       </div>
 
       <ul className="p-4">
-        {categories.map((cat) => (
-          <li
-            key={cat._id}
-            className="py-2 border-b text-blue-600 hover:text-blue-800"
-          >
-            <Link
-              to={`/category/${encodeURIComponent(cat.name)}`}
-              onClick={onClose}
+
+        {/* 🔥 যদি কোনো category না থাকে */}
+        {categories.length === 0 && (
+          <p className="text-gray-400 text-sm text-center py-3">
+            No categories available
+          </p>
+        )}
+
+        {/* 🔵 categories থাকলে দেখাবে */}
+        {categories.length > 0 &&
+          categories.map((cat, index) => (
+            <li
+              key={cat._id || `${cat.name}-${index}`}
+              className="py-2 border-b text-blue-600 hover:text-blue-800"
             >
-              {cat.name}
-            </Link>
-          </li>
-        ))}
+              <Link
+                to={`/category/${encodeURIComponent(cat.name)}`}
+                onClick={onClose}
+              >
+                {cat.name}
+              </Link>
+            </li>
+          ))}
       </ul>
     </div>
   );

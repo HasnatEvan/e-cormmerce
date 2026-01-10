@@ -1,9 +1,11 @@
 import BannerImage from "../../assets/Banner/BannerImage.jpg";
+import LazyLoader from "../../LazyLoader/LazyLoader";
+
 
 const Banner = () => {
   return (
     <div className="w-full my-6 px-4">
-      <img
+      <LazyLoader
         src={BannerImage}
         alt="Banner"
         className="

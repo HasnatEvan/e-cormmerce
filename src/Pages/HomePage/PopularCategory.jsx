@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import useAxiosPublic from "../../Hooks/useAxiosPublic";
 import { useQuery } from "@tanstack/react-query";
+import LazyLoader from "../../LazyLoader/LazyLoader";
+
 
 const PopularCategory = () => {
   const axiosPublic = useAxiosPublic();
@@ -101,9 +103,9 @@ const PopularCategory = () => {
               p-4 hover:shadow-lg transition
             "
           >
-            {/* Image */}
+            {/* Image (Lazy Loaded) */}
             <div className="w-24 h-24 flex items-center justify-center">
-              <img
+              <LazyLoader
                 src={category.categoryImage}
                 alt={category.category || "Category image"}
                 className="w-full h-full object-contain"

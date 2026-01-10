@@ -4,11 +4,13 @@ import { CiHeart } from "react-icons/ci";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import useAuth from "../../Hooks/useAuth";
-import useAxiosSecure from "../../Hooks/useAxiosSecure";
+import useAxiosPublic from "../../Hooks/useAxiosPublic";
+import LazyLoader from "../../LazyLoader/LazyLoader";
+
 
 const Card = ({ product }) => {
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
+  const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
 
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -17,15 +19,13 @@ const Card = ({ product }) => {
   const discount = product.discount || 0;
   const finalAmount = product.finalAmount || product.price;
 
-  /* =====================
-     CHECK WISHLIST (ON LOAD)
-  ===================== */
+  // CHECK WISHLIST
   useEffect(() => {
     if (!user) return;
 
     const loadWishlist = async () => {
       try {
-        const res = await axiosSecure.get(
+        const res = await axiosPublic.get(
           `/wishlists?email=${user.email}`
         );
 
@@ -40,11 +40,9 @@ const Card = ({ product }) => {
     };
 
     loadWishlist();
-  }, [user, product._id, axiosSecure]);
+  }, [user, product._id, axiosPublic]);
 
-  /* =====================
-     TOGGLE WISHLIST
-  ===================== */
+  // TOGGLE WISHLIST
   const handleWishlist = async (e) => {
     e.preventDefault();
 
@@ -58,28 +56,29 @@ const Card = ({ product }) => {
     setLoading(true);
 
     try {
-      // 🔴 REMOVE
       if (isWishlisted) {
-        await axiosSecure.delete(
+        await axiosPublic.delete(
           `/wishlists?productId=${product._id}&email=${user.email}`
         );
+
         toast.info("Removed from wishlist");
         setIsWishlisted(false);
-      }
-      // 🟢 ADD
-      else {
+        window.dispatchEvent(new Event("wishlist-updated"));
+      } else {
         const wishlistItem = {
           productId: product._id,
           name: product.name,
           image: product.images?.[0],
           price: finalAmount,
-            quantity: product.quantity, 
+          quantity: product.quantity,
           userEmail: user.email,
         };
 
-        await axiosSecure.post("/wishlists", wishlistItem);
+        await axiosPublic.post("/wishlists", wishlistItem);
+
         toast.success("Added to wishlist");
         setIsWishlisted(true);
+        window.dispatchEvent(new Event("wishlist-updated"));
       }
     } catch {
       toast.error("Wishlist action failed");
@@ -91,10 +90,10 @@ const Card = ({ product }) => {
   return (
     <Link to={`/product-details/${product._id}`}>
       <div className="bg-white border border-blue-500 hover:shadow-md transition p-3 flex flex-col w-full relative rounded-lg h-full">
-
-        {/* Product Image */}
+        
+        {/* IMAGE */}
         <div className="relative mb-3">
-          <img
+          <LazyLoader
             src={
               product.images?.[0] ||
               product.categoryImage ||
@@ -104,7 +103,7 @@ const Card = ({ product }) => {
             className="h-32 sm:h-36 md:h-40 lg:h-44 object-contain mx-auto"
           />
 
-          {/* Wishlist Toggle */}
+          {/* WISHLIST */}
           <button
             onClick={handleWishlist}
             disabled={loading}
@@ -117,7 +116,7 @@ const Card = ({ product }) => {
             {isWishlisted ? <FaHeart /> : <CiHeart />}
           </button>
 
-          {/* Discount Badge */}
+          {/* DISCOUNT */}
           {discount > 0 && (
             <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
               {discount}%
@@ -125,7 +124,7 @@ const Card = ({ product }) => {
           )}
         </div>
 
-        {/* Product Name */}
+        {/* NAME */}
         <h3
           className="text-xs font-medium mb-2 min-h-[32px]"
           style={{
@@ -138,7 +137,7 @@ const Card = ({ product }) => {
           {product.name}
         </h3>
 
-        {/* Price + Cart */}
+        {/* PRICE + CART */}
         <div className="flex items-center justify-between mt-auto">
           <div>
             {discount > 0 ? (

@@ -44,11 +44,10 @@ const ManageProductsTable = ({ products, onDelete }) => {
 
             <div className="col-span-2 text-center">
               <span
-                className={`px-2 py-1 rounded text-xs font-semibold ${
-                  product.quantity <= 5
+                className={`px-2 py-1 rounded text-xs font-semibold ${product.quantity <= 5
                     ? "bg-red-100 text-red-600"
                     : "bg-green-100 text-green-600"
-                }`}
+                  }`}
               >
                 {product.quantity} pcs
               </span>
@@ -87,8 +86,9 @@ const ManageProductsTable = ({ products, onDelete }) => {
                   "https://via.placeholder.com/80"
                 }
                 alt={product.name}
-                className="w-24 h-24 sm:w-20 sm:h-20 object-contain rounded border"
+                className="w-24 h-24 sm:w-20 sm:h-20 object-contain rounded border border-blue-600"
               />
+
 
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-800 line-clamp-2">
@@ -104,11 +104,10 @@ const ManageProductsTable = ({ products, onDelete }) => {
                 </p>
 
                 <span
-                  className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${
-                    product.quantity <= 5
+                  className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${product.quantity <= 5
                       ? "bg-red-100 text-red-600"
                       : "bg-green-100 text-green-600"
-                  }`}
+                    }`}
                 >
                   Stock: {product.quantity}
                 </span>
