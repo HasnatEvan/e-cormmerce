@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import useAxiosPublic from "../../Hooks/useAxiosPublic";
 import useAxiosSecure from "../../Hooks/useAxiosSecure";
 import useAuth from "../../Hooks/useAuth";
+import useRole from "../../Hooks/useRole";
 import QuestionForm from "../QuestionFrom/QuestionFrom";
 import Card from "../Card/Card";
 import LazyLoader from "../../LazyLoader/LazyLoader";
@@ -17,6 +18,7 @@ const ProductDetails = () => {
   const axiosPublic = useAxiosPublic();
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
+  const [role] = useRole();
 
   const [product, setProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("Description");
@@ -100,6 +102,10 @@ const ProductDetails = () => {
     if (!user) {
       toast.warning("Please login first");
       navigate("/login");
+      return false;
+    }
+    if (role === "admin") {
+      toast.error("Admin users can't buy or add to cart");
       return false;
     }
 
@@ -263,16 +269,24 @@ const ProductDetails = () => {
           <div className="mt-5 flex gap-3 flex-wrap">
             <button
               onClick={handleAddToCart}
-              disabled={loadingCart}
-              className="border border-blue-500 text-blue-500 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-blue-50"
+              disabled={loadingCart || role === "admin"}
+              className={`border px-4 py-2 rounded-full flex items-center gap-2 ${
+                role === "admin"
+                  ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                  : "border-blue-500 text-blue-500 hover:bg-blue-50"
+              }`}
             >
               <FaShoppingCart /> Add to Cart
             </button>
 
             <button
               onClick={handleBuyNow}
-              disabled={loadingCart}
-              className="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-blue-700"
+              disabled={loadingCart || role === "admin"}
+              className={`px-6 py-2 rounded-full flex items-center gap-2 ${
+                role === "admin"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-700"
+              }`}
             >
               Buy Now <FaArrowRight />
             </button>

@@ -99,7 +99,7 @@ useEffect(() => {
           setUser(currentUser);
 
           await axios.post(
-            "https://server.fastforwardlogistics.org/jwt",
+            "http://localhost:5000/jwt",
             { email: currentUser.email },
             { withCredentials: true }
           );
@@ -107,7 +107,7 @@ useEffect(() => {
           setUser(null);
 
           await axios.get(
-            "https://server.fastforwardlogistics.org/logout",
+            "http://localhost:5000/logout",
             { withCredentials: true }
           );
         }

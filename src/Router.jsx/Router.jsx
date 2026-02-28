@@ -18,6 +18,8 @@ import Cart from "../Pages/HomePage/Cart/Cart";
 import Checkout from "../Components/Checkout/Checkout";
 import SingleCheckout from "../Components/Checkout/SingleCheckout";
 import SuccessPage from "../Components/SuccessPage/SuccessPage";
+import PaymentFail from "../Components/PaymentFail/PaymentFail";
+import PaymentCancel from "../Components/PaymentCancel/PaymentCancel";
 import MyOrders from "../Pages/Dashboard/UsersPages/MyOrders/MyOrders";
 
 /* ================= ADMIN ================= */
@@ -89,6 +91,22 @@ export const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <SuccessPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "payment-fail",
+        element: (
+          <PrivateRoute>
+            <PaymentFail />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "payment-cancel",
+        element: (
+          <PrivateRoute>
+            <PaymentCancel />
           </PrivateRoute>
         ),
       },

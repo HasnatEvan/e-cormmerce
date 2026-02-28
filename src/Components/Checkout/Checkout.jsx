@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import useAuth from "../../Hooks/useAuth";
 import useAxiosSecure from "../../Hooks/useAxiosSecure";
+import useRole from "../../Hooks/useRole";
 import { toast } from "react-toastify";
 
 const Checkout = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const navigate = useNavigate();
+  const [role, roleLoading] = useRole();
 
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,13 +21,9 @@ const Checkout = () => {
   const [notes, setNotes] = useState("");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("bkash");
-  const [trxId, setTrxId] = useState("");
+  const [paymentMethod] = useState("sslcommerz");
 
   const [errors, setErrors] = useState({});
-
-  const BKASH_NUMBER = "01711-XXXXXX";
-  const NAGAD_NUMBER = "01822-XXXXXX";
 
   const DELIVERY_FEE = areaType === "inside" ? 100 : 150;
 
@@ -78,7 +74,6 @@ const Checkout = () => {
 
     if (!district) newErrors.district = "District is required";
     if (!address) newErrors.address = "Address is required";
-    if (!trxId) newErrors.trxId = "Transaction ID is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -99,13 +94,12 @@ const Checkout = () => {
 
     const orderData = {
       userEmail: user.email,
-      userName: user.displayName, 
+      userName: user.displayName,
       phone,
       district,
       areaType,
       address,
       notes,
-
 
       items: cart.map((item) => ({
         productId: item.productId,
@@ -120,22 +114,35 @@ const Checkout = () => {
       totalQuantity,
       subTotal,
       deliveryFee: DELIVERY_FEE,
-      totalPrice,
+      totalAmount: totalPrice + DELIVERY_FEE,
       paymentMethod,
-      trxId,
-      status: "Pending",
-      orderTime: new Date(),
+      customer: {
+        name: user.displayName || "Customer",
+        phone,
+        address,
+        city: district,
+        postcode: "0000",
+        country: "Bangladesh",
+      },
+      shipping: {
+        name: user.displayName || "Customer",
+        phone,
+        address,
+        city: district,
+        postcode: "0000",
+        country: "Bangladesh",
+      },
     };
 
     try {
-      const res = await axiosSecure.post("/orders", orderData);
+      const res = await axiosSecure.post("/payment/init", orderData);
+      const gatewayUrl = res.data?.gatewayUrl;
 
-      if (res.data.success) {
-        toast.success("Order placed successfully ");
-        navigate("/success");
-      } else {
-        setOrderLoading(false);
+      if (!gatewayUrl) {
+        throw new Error("Gateway URL missing");
       }
+
+      window.location.replace(gatewayUrl);
     } catch (error) {
       setOrderLoading(false);
       toast.error(
@@ -144,11 +151,18 @@ const Checkout = () => {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <p className="text-center mt-20 text-gray-500">
         Loading checkout...
       </p>
+    );
+  }
+  if (role === "admin") {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center text-gray-600">
+        Admin users can’t place orders. Please use a customer account.
+      </div>
     );
   }
 
@@ -224,32 +238,17 @@ const Checkout = () => {
             Payment Method
           </h3>
 
-          <div
-            className={paymentBox(paymentMethod === "bkash")}
-            onClick={() => setPaymentMethod("bkash")}
-          >
-            <p className="font-medium">bKash</p>
-            <p className="text-sm font-semibold">{BKASH_NUMBER}</p>
-          </div>
-
-          <div
-            className={paymentBox(paymentMethod === "nagad")}
-            onClick={() => setPaymentMethod("nagad")}
-          >
-            <p className="font-medium">Nagad</p>
-            <p className="text-sm font-semibold">{NAGAD_NUMBER}</p>
+          <div className={paymentBox(true)}>
+            <p className="font-medium">SSLCommerz</p>
+            <p className="text-sm text-gray-600">
+              Pay securely with card/mobile banking.
+            </p>
           </div>
 
           <p className="text-sm text-red-600">
-            ⚠️ Delivery fee ৳{DELIVERY_FEE} will be paid on delivery
+            ?????? Delivery fee ???{DELIVERY_FEE} will be added to total
           </p>
 
-          <input
-            className={inputClass("trxId")}
-            placeholder="Transaction ID"
-            value={trxId}
-            onChange={(e) => setTrxId(e.target.value)}
-          />
         </div>
 
         {/* RIGHT */}
@@ -291,7 +290,7 @@ const Checkout = () => {
 
           <div className="flex justify-between font-semibold text-lg mt-4">
             <span>Total</span>
-            <span>৳ {totalPrice}</span>
+            <span>Tk {totalPrice + DELIVERY_FEE}</span>
           </div>
 
           <button
@@ -299,7 +298,7 @@ const Checkout = () => {
             disabled={orderLoading}
             className="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-70"
           >
-            {orderLoading ? "Processing..." : "PLACE ORDER"}
+            {orderLoading ? "Processing..." : "PAY NOW"}
           </button>
         </div>
       </div>

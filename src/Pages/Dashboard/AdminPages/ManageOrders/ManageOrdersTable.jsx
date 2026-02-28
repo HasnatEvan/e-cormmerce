@@ -1,15 +1,44 @@
 import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
 import { FaEye, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 
 const ManageOrdersTable = ({ orders, refetch }) => {
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const sortedOrders = [...orders].sort(
     (a, b) => new Date(b.orderTime) - new Date(a.orderTime)
   );
+  const cancelledIds = useMemo(
+    () =>
+      sortedOrders
+        .filter((o) => o.status?.toLowerCase() === "cancelled")
+        .map((o) => o._id),
+    [sortedOrders]
+  );
+
+  const allSelected =
+    sortedOrders.length > 0 &&
+    sortedOrders.every((o) => selectedIds.includes(o._id));
+
+  const toggleSelect = (orderId) => {
+    setSelectedIds((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(sortedOrders.map((o) => o._id));
+    }
+  };
 
   /* ================= STATUS STYLE ================= */
   const getStatusStyle = (status) => {
@@ -31,19 +60,9 @@ const ManageOrdersTable = ({ orders, refetch }) => {
 
   /* ================= DELETE ORDER (ONLY CANCELLED) ================= */
   const handleDeleteOrder = async (order) => {
-    // ❌ Only cancelled orders can be deleted
-    if (order.status?.toLowerCase() !== "cancelled") {
-      return Swal.fire({
-        icon: "warning",
-        title: "Action not allowed",
-        text: "Only cancelled orders can be deleted.",
-        confirmButtonColor: "#2563eb",
-      });
-    }
-
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "This cancelled order will be permanently deleted!",
+      text: "This order will be permanently deleted!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#e11d48",
@@ -71,6 +90,58 @@ const ManageOrdersTable = ({ orders, refetch }) => {
         icon: "error",
         title: "Failed!",
         text: "Failed to delete order. Please try again.",
+      });
+    }
+  };
+
+  /* ================= BULK DELETE (CANCELLED ONLY) ================= */
+  const handleBulkDelete = async () => {
+    const deletableIds = [...selectedIds];
+
+    if (deletableIds.length === 0) {
+      return Swal.fire({
+        icon: "warning",
+        title: "No orders selected",
+        text: "Please select at least one order.",
+        confirmButtonColor: "#2563eb",
+      });
+    }
+
+    const result = await Swal.fire({
+      title: "Delete selected orders?",
+      text: `You are deleting ${deletableIds.length} cancelled order(s). This cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await Promise.all(
+        deletableIds.map((id) => axiosSecure.delete(`/orders/${id}`))
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted",
+        text: "Selected cancelled orders deleted successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setSelectedIds((prev) =>
+        prev.filter((id) => !deletableIds.includes(id))
+      );
+      refetch();
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: "Failed to delete selected orders.",
       });
     }
   };
@@ -110,11 +181,54 @@ const ManageOrdersTable = ({ orders, refetch }) => {
   return (
     <div className="flex flex-col min-h-[80vh]">
 
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="text-sm text-gray-500">
+          Selected:{" "}
+          <span className="font-semibold text-gray-700">
+            {selectedIds.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleSelectAll}
+            disabled={sortedOrders.length === 0}
+            className={`px-3 py-1.5 rounded border text-sm ${
+              sortedOrders.length === 0
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-blue-400 text-blue-600 hover:bg-blue-50"
+            }`}
+          >
+            {allSelected ? "Unselect All" : "Select All"}
+          </button>
+
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.length === 0}
+            className={`px-3 py-1.5 rounded text-sm ${
+              selectedIds.length === 0
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-red-600 text-white hover:bg-red-700"
+            }`}
+          >
+            Delete Selected
+          </button>
+        </div>
+      </div>
+
       {/* ================= DESKTOP ================= */}
       <div className="hidden md:block overflow-x-auto">
         <div className="grid grid-cols-12 border-b border-blue-500 pb-2 text-sm font-medium text-gray-500">
+          <div className="col-span-1 text-center">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              disabled={sortedOrders.length === 0}
+            />
+          </div>
           <div className="col-span-3">Customer</div>
-          <div className="col-span-4">Product</div>
+          <div className="col-span-3">Product</div>
           <div className="col-span-2 text-center">Date</div>
           <div className="col-span-1 text-center">Status</div>
           <div className="col-span-2 text-center">Action</div>
@@ -123,12 +237,23 @@ const ManageOrdersTable = ({ orders, refetch }) => {
         {sortedOrders.map((order) => {
           const isCancelled =
             order.status?.toLowerCase() === "cancelled";
+          const isSelected = selectedIds.includes(order._id);
 
           return (
             <div
               key={order._id}
               className="grid grid-cols-12 items-center border-b border-blue-200 py-4 text-sm"
             >
+              {/* SELECT */}
+              <div className="col-span-1 flex justify-center">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleSelect(order._id)}
+                  title="Select order"
+                />
+              </div>
+
               {/* CUSTOMER */}
               <div className="col-span-3">
                 <p className="font-medium">
@@ -140,7 +265,7 @@ const ManageOrdersTable = ({ orders, refetch }) => {
               </div>
 
               {/* PRODUCT */}
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <p
                   className="font-medium text-gray-700 truncate"
                   title={order.items?.[0]?.name}
@@ -181,17 +306,8 @@ const ManageOrdersTable = ({ orders, refetch }) => {
 
                 <button
                   onClick={() => handleDeleteOrder(order)}
-                  disabled={!isCancelled}
-                  className={`${
-                    isCancelled
-                      ? "text-red-500 hover:text-red-700"
-                      : "text-gray-400 cursor-not-allowed"
-                  }`}
-                  title={
-                    isCancelled
-                      ? "Delete cancelled order"
-                      : "Only cancelled orders can be deleted"
-                  }
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete order"
                 >
                   <FaTrashAlt />
                 </button>
@@ -206,12 +322,22 @@ const ManageOrdersTable = ({ orders, refetch }) => {
         {sortedOrders.map((order) => {
           const isCancelled =
             order.status?.toLowerCase() === "cancelled";
+          const isSelected = selectedIds.includes(order._id);
 
           return (
             <div
               key={order._id}
               className="border border-blue-300 rounded-lg p-4 space-y-3"
             >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Select</span>
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleSelect(order._id)}
+                />
+              </div>
+
               <div>
                 <p className="font-medium">
                   {order.userName || "Unknown User"}
@@ -261,12 +387,7 @@ const ManageOrdersTable = ({ orders, refetch }) => {
 
                 <button
                   onClick={() => handleDeleteOrder(order)}
-                  disabled={!isCancelled}
-                  className={`${
-                    isCancelled
-                      ? "text-red-500"
-                      : "text-gray-400 cursor-not-allowed"
-                  }`}
+                  className="text-red-500"
                 >
                   <FaTrashAlt />
                 </button>

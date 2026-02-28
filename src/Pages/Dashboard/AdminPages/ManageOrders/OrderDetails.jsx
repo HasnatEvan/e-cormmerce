@@ -111,7 +111,10 @@ const OrderDetails = () => {
               </h3>
 
               <p><strong>Payment:</strong> {order.paymentMethod}</p>
-              <p><strong>Transaction ID:</strong> {order.trxId}</p>
+              <p>
+                <strong>Transaction ID:</strong>{" "}
+                {order.transactionId || order.trxId || "N/A"}
+              </p>
 
               {/* STATUS VIEW */}
               <div className="flex items-center gap-2">

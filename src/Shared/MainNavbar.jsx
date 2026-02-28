@@ -10,12 +10,14 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
 import useAuth from "../Hooks/useAuth";
+import useRole from "../Hooks/useRole";
 import MobileSidebar from "./MobileSidebar ";
 
 const MainNavbar = () => {
   const { user } = useAuth();
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
+  const [role] = useRole();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -44,7 +46,7 @@ const MainNavbar = () => {
 
   /* ================= Wishlist & Cart Count (AUTO-UPDATE) ================= */
   useEffect(() => {
-    if (!user?.email) {
+    if (!user?.email || role === "admin") {
       setWishlistCount(0);
       setCartCount(0);
       return;
@@ -77,7 +79,7 @@ const MainNavbar = () => {
       window.removeEventListener("wishlist-updated", handler);
       window.removeEventListener("cart-updated", handler);
     };
-  }, [user, axiosPublic]);
+  }, [user, axiosPublic, role]);
 
   /* ================= MOBILE LIVE SEARCH ================= */
   useEffect(() => {
@@ -196,17 +198,19 @@ const MainNavbar = () => {
             )}
           </NavLink>
 
-          {/* Cart */}
-          <NavLink to="/cart" className="relative flex items-center gap-2 text-blue-500">
-            <FaShoppingCart className="text-xl" />
-            <span className="text-sm">Cart</span>
+          {/* Cart (hide for admin) */}
+          {role !== "admin" && (
+            <NavLink to="/cart" className="relative flex items-center gap-2 text-blue-500">
+              <FaShoppingCart className="text-xl" />
+              <span className="text-sm">Cart</span>
 
-            {cartCount > 0 && (
-              <span className="absolute -top-3 -right-4 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </NavLink>
+              {cartCount > 0 && (
+                <span className="absolute -top-3 -right-4 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </NavLink>
+          )}
         </div>
 
         {/* ================= MOBILE ================= */}
