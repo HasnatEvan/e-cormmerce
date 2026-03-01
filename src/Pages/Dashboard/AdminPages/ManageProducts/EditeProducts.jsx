@@ -117,7 +117,7 @@ const EditProducts = () => {
 
       await axiosSecure.put(`/products/${id}`, updatedProduct);
       toast.success("Product updated successfully");
-      navigate("/inventory");
+      navigate("/admin/inventory");
 
     } catch (error) {
       console.error(error);

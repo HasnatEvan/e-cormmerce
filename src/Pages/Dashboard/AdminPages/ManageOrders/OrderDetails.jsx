@@ -1,5 +1,19 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import {
+  FaArrowLeft,
+  FaBoxOpen,
+  FaCheckCircle,
+  FaClock,
+  FaCog,
+  FaMapMarkerAlt,
+  FaMoneyBillWave,
+  FaPhoneAlt,
+  FaReceipt,
+  FaTimesCircle,
+  FaUndoAlt,
+  FaUser,
+} from "react-icons/fa";
 import Sidebar from "../../../../Components/Sidebar/Sidebar";
 import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
 import { toast } from "react-toastify";
@@ -14,31 +28,63 @@ const OrderDetails = () => {
 
   if (!order) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-red-500 text-lg">
+      <div className="min-h-[60vh] flex items-center justify-center text-rose-600 text-lg">
         Order data not found
       </div>
     );
   }
 
-  /* ================= STATUS STYLE ================= */
-  const getStatusStyle = (status) => {
-    switch (status?.toLowerCase()) {
+  const items = Array.isArray(order.items) ? order.items : [];
+
+  const formatCurrency = (value) => `Tk ${Number(value || 0).toLocaleString("en-BD")}`;
+
+  const formatDateTime = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-BD", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const getStatusStyle = (statusValue) => {
+    switch (statusValue?.toLowerCase()) {
       case "pending":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-amber-500 text-white";
       case "processing":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-600 text-white";
       case "delivered":
-        return "bg-green-100 text-green-700";
+        return "bg-emerald-600 text-white";
       case "returned":
-        return "bg-purple-100 text-purple-700";
+        return "bg-violet-600 text-white";
       case "cancelled":
-        return "bg-red-100 text-red-700";
+        return "bg-rose-600 text-white";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-slate-600 text-white";
     }
   };
 
-  /* ================= UPDATE STATUS ================= */
+  const getStatusIcon = (statusValue) => {
+    switch (statusValue?.toLowerCase()) {
+      case "pending":
+        return <FaClock className="text-xs" />;
+      case "processing":
+        return <FaCog className="text-xs" />;
+      case "delivered":
+        return <FaCheckCircle className="text-xs" />;
+      case "returned":
+        return <FaUndoAlt className="text-xs" />;
+      case "cancelled":
+        return <FaTimesCircle className="text-xs" />;
+      default:
+        return <FaBoxOpen className="text-xs" />;
+    }
+  };
+
   const handleStatusUpdate = async () => {
     if (status === order.status) return;
 
@@ -46,7 +92,7 @@ const OrderDetails = () => {
       setUpdating(true);
       await axiosSecure.patch(`/orders/${order._id}`, { status });
       toast.success("Order status updated");
-      order.status = status; // UI instant update
+      order.status = status;
     } catch {
       toast.error("Failed to update status");
       setStatus(order.status);
@@ -56,187 +102,172 @@ const OrderDetails = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-4">
+    <div className="max-w-7xl mx-auto p-3 sm:p-4 rounded-2xl">
       <div className="flex flex-col md:flex-row gap-6">
-
-        {/* ================= SIDEBAR ================= */}
         <aside className="hidden md:block md:w-1/4">
           <Sidebar />
         </aside>
 
-        {/* ================= MAIN ================= */}
-        <main className="w-full md:w-3/4 flex flex-col gap-6">
-
-          {/* ================= HEADER ================= */}
-          <div className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-5 flex justify-between items-center shadow">
-            <h2 className="text-xl sm:text-2xl font-semibold">
-              Order Details
-            </h2>
-            <button
-              onClick={() => navigate(-1)}
-              className="bg-white text-blue-600 px-4 py-1.5 rounded-md font-medium border border-blue-400 hover:bg-blue-50 transition"
-            >
-              ← Back
-            </button>
-          </div>
-
-          {/* ================= CUSTOMER + ORDER INFO ================= */}
-          <div className="grid md:grid-cols-2 gap-6">
-
-            {/* ================= CUSTOMER INFO ================= */}
-            <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5 space-y-2">
-              <h3 className="font-semibold text-lg text-blue-600 mb-3">
-                Customer Information
-              </h3>
-
-              <p className="text-lg font-bold text-blue-700">
-                {order.userName || "Unknown Customer"}
-              </p>
-
-              <p><strong>Email:</strong> {order.userEmail}</p>
-              <p><strong>Phone:</strong> {order.phone}</p>
-              <p><strong>District:</strong> {order.district}</p>
-              <p><strong>Area Type:</strong> {order.areaType}</p>
-              <p><strong>Address:</strong> {order.address}</p>
-
-              {order.notes && (
-                <p><strong>Notes:</strong> {order.notes}</p>
-              )}
-            </div>
-
-            {/* ================= ORDER INFO ================= */}
-            <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5 space-y-3">
-              <h3 className="font-semibold text-lg text-blue-600 mb-3">
-                Order Information
-              </h3>
-
-              <p><strong>Payment:</strong> {order.paymentMethod}</p>
-              <p>
-                <strong>Transaction ID:</strong>{" "}
-                {order.transactionId || order.trxId || "N/A"}
-              </p>
-
-              {/* STATUS VIEW */}
-              <div className="flex items-center gap-2">
-                <strong>Status:</strong>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
-                    status
-                  )}`}
-                >
-                  {status}
-                </span>
+        <main className="w-full md:w-3/4 space-y-6">
+          <section className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 p-5 text-white shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold">Order Details</h1>
+                <p className="mt-1 text-blue-50 text-sm">
+                  Order ID: {order._id}
+                </p>
               </div>
 
-              {/* STATUS CHANGE */}
-              <div className="flex flex-col gap-2 pt-2">
-                <label className="text-sm font-medium text-gray-600">
-                  Change Status
-                </label>
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 rounded-md border border-white/60 bg-white text-blue-700 px-4 py-2 text-sm font-semibold hover:bg-blue-50"
+              >
+                <FaArrowLeft />
+                Back
+              </button>
+            </div>
+          </section>
 
-                <div className="flex gap-2">
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="border border-blue-300 rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="returned">Returned</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-white to-sky-50 p-5 shadow-sm">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-sky-800">
+                <FaUser />
+                Customer Information
+              </h2>
 
-                  <button
-                    onClick={handleStatusUpdate}
-                    disabled={updating}
-                    className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {updating ? "Updating..." : "Update"}
-                  </button>
+              <div className="mt-4 space-y-2 text-sm text-slate-700">
+                <p className="text-xl font-bold text-sky-700">{order.userName || "Unknown Customer"}</p>
+                <p><strong>Email:</strong> {order.userEmail || "N/A"}</p>
+                <p className="inline-flex items-center gap-2"><FaPhoneAlt className="text-xs" /> {order.phone || "N/A"}</p>
+                <p><strong>District:</strong> {order.district || "N/A"}</p>
+                <p><strong>Area Type:</strong> {order.areaType || "N/A"}</p>
+                <p className="inline-flex items-start gap-2"><FaMapMarkerAlt className="mt-0.5 text-xs" /> {order.address || "N/A"}</p>
+                {order.notes && <p><strong>Notes:</strong> {order.notes}</p>}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-white to-indigo-50 p-5 shadow-sm">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-indigo-800">
+                <FaReceipt />
+                Order Information
+              </h2>
+
+              <div className="mt-4 space-y-3 text-sm text-slate-700">
+                <p><strong>Payment:</strong> {order.paymentMethod || "N/A"}</p>
+                <p><strong>Transaction ID:</strong> {order.transactionId || order.trxId || "N/A"}</p>
+                <p><strong>Order Time:</strong> {formatDateTime(order.orderTime)}</p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <strong>Status:</strong>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(status)}`}>
+                    {getStatusIcon(status)}
+                    {status || "N/A"}
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-indigo-200 bg-white/80 p-3">
+                  <label className="text-xs font-medium text-indigo-700">Change Status</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm outline-none focus:border-indigo-500"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="returned">Returned</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    <button
+                      onClick={handleStatusUpdate}
+                      disabled={updating}
+                      className="rounded-md bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-1.5 text-sm font-medium text-white hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60"
+                    >
+                      {updating ? "Updating..." : "Update"}
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <p>
-                <strong>Order Time:</strong>{" "}
-                {new Date(order.orderTime).toLocaleString("en-BD")}
-              </p>
             </div>
-          </div>
+          </section>
 
-          {/* ================= ORDERED ITEMS ================= */}
-          <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5">
-            <h3 className="font-semibold text-lg text-blue-600 mb-4">
+          <section className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-emerald-800">
+              <FaBoxOpen />
               Ordered Items
-            </h3>
+            </h2>
 
-            <div className="space-y-4">
-              {order.items.map((item, index) => {
-                const imageSrc =
-                  item.image ||
-                  item.imageUrl ||
-                  (Array.isArray(item.images) ? item.images[0] : null);
+            {items.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">No items found in this order.</p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {items.map((item, index) => {
+                  const imageSrc =
+                    item.image ||
+                    item.imageUrl ||
+                    (Array.isArray(item.images) ? item.images[0] : null);
 
-                return (
-                  <div
-                    key={index}
-                    className="flex gap-4 p-4 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow transition"
-                  >
-                    <div className="w-20 h-20 rounded-md overflow-hidden border border-blue-400 bg-blue-50">
-                      {imageSrc ? (
-                        <img
-                          src={imageSrc}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-blue-400">
-                          No Image
+                  return (
+                    <div
+                      key={`${item?.productId || item?.name || "item"}-${index}`}
+                      className="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex gap-4">
+                        <div className="h-20 w-20 overflow-hidden rounded-md border border-emerald-300 bg-emerald-50">
+                          {imageSrc ? (
+                            <img src={imageSrc} alt={item?.name || "Product"} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-emerald-500">
+                              No Image
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">
-                        {item.name}
-                      </p>
-                      <div className="grid sm:grid-cols-3 gap-2 text-sm text-gray-600 mt-2">
-                        <p>Price: ৳ {item.price}</p>
-                        <p>Quantity: {item.quantity}</p>
-                        <p>
-                          Color: {item.color || "N/A"} | Size:{" "}
-                          {item.size || "N/A"}
-                        </p>
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-800">{item?.name || "Unnamed Product"}</p>
+                          <div className="mt-2 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+                            <p><strong>Price:</strong> {formatCurrency(item?.price)}</p>
+                            <p><strong>Qty:</strong> {item?.quantity ?? 0}</p>
+                            <p><strong>Color:</strong> {item?.color || "N/A"}</p>
+                            <p><strong>Size:</strong> {item?.size || "N/A"}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
 
-          {/* ================= PRICE SUMMARY ================= */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-300 rounded-xl p-5 shadow-sm">
-            <h3 className="font-semibold text-lg text-blue-700 mb-3">
+          <section className="rounded-2xl border border-fuchsia-200 bg-gradient-to-r from-fuchsia-50 to-violet-50 p-5 shadow-sm">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-fuchsia-800">
+              <FaMoneyBillWave />
               Price Summary
-            </h3>
+            </h2>
 
-            <div className="space-y-1 text-sm text-gray-700">
-              <p>Sub Total: ৳ {order.subTotal}</p>
-              <p>Delivery Fee: ৳ {order.deliveryFee}</p>
-              <p>Total Quantity: {order.totalQuantity}</p>
+            <div className="mt-4 space-y-2 text-sm text-slate-700">
+              <div className="flex items-center justify-between rounded-md bg-white/80 px-3 py-2">
+                <span>Sub Total</span>
+                <strong>{formatCurrency(order.subTotal)}</strong>
+              </div>
+              <div className="flex items-center justify-between rounded-md bg-white/80 px-3 py-2">
+                <span>Delivery Fee</span>
+                <strong>{formatCurrency(order.deliveryFee)}</strong>
+              </div>
+              <div className="flex items-center justify-between rounded-md bg-white/80 px-3 py-2">
+                <span>Total Quantity</span>
+                <strong>{order.totalQuantity || 0}</strong>
+              </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-blue-300 flex justify-between items-center">
-              <span className="font-semibold text-blue-800">
-                Total Price
-              </span>
-              <span className="text-2xl font-bold text-blue-700">
-                ৳ {order.totalPrice}
-              </span>
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-fuchsia-300 bg-white px-4 py-3">
+              <span className="font-semibold text-fuchsia-800">Total Price</span>
+              <span className="text-2xl font-bold text-fuchsia-700">{formatCurrency(order.totalPrice)}</span>
             </div>
-          </div>
-
+          </section>
         </main>
       </div>
     </div>

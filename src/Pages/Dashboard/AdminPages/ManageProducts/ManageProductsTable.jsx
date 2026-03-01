@@ -54,7 +54,7 @@ const ManageProductsTable = ({ products, onDelete }) => {
             </div>
 
             <div className="col-span-2 flex justify-center gap-4">
-              <Link to={`/edit-products/${product._id}`}>
+              <Link to={`/admin/edit-products/${product._id}`}>
                 <button className="text-blue-500 hover:text-blue-700">
                   <FaEdit size={18} />
                 </button>
@@ -115,7 +115,7 @@ const ManageProductsTable = ({ products, onDelete }) => {
             </div>
 
             <div className="flex justify-end gap-3 mt-4">
-              <Link to={`/edit-products/${product._id}`}>
+              <Link to={`/admin/edit-products/${product._id}`}>
                 <button className="px-4 py-1.5 text-sm border border-blue-500 text-blue-600 rounded hover:bg-blue-50">
                   Edit
                 </button>

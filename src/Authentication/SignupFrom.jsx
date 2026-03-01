@@ -4,7 +4,7 @@ import useAuth from "../Hooks/useAuth";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
 import { toast } from "react-toastify";
 import { imageUpload } from "../Api/utils";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const SignupFrom = () => {
   const { createUser, updateUserProfile } = useAuth();
@@ -18,6 +18,9 @@ const SignupFrom = () => {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [emailForOtp, setEmailForOtp] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const lastExistsToastEmailRef = useRef("");
 
   // LOADING
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -39,6 +42,9 @@ const SignupFrom = () => {
 
     try {
       setSendingOtp(true);
+      const unavailable = await checkEmailAvailability(emailForOtp.trim(), true);
+      if (unavailable) return;
+
       await axiosPublic.post("/send-otp", { email: emailForOtp });
       toast.success("OTP sent to your email");
       setOtpSent(true);
@@ -46,6 +52,33 @@ const SignupFrom = () => {
       toast.error("Failed to send OTP");
     } finally {
       setSendingOtp(false);
+    }
+  };
+
+  const checkEmailAvailability = async (email, showToast = false) => {
+    if (!email) return false;
+    try {
+      setCheckingEmail(true);
+      const emailCheckRes = await axiosPublic.post("/users/check-email", { email });
+      const exists = Boolean(emailCheckRes?.data?.exists);
+      setEmailExists(exists);
+
+      if (exists) {
+        setOtpSent(false);
+        setOtpVerified(false);
+        if (showToast && lastExistsToastEmailRef.current !== email) {
+          toast.error("This email is already registered. Use another email.");
+          lastExistsToastEmailRef.current = email;
+        }
+      } else if (lastExistsToastEmailRef.current === email) {
+        lastExistsToastEmailRef.current = "";
+      }
+
+      return exists;
+    } catch {
+      return false;
+    } finally {
+      setCheckingEmail(false);
     }
   };
 
@@ -117,6 +150,11 @@ const SignupFrom = () => {
     }
 
     try {
+      const unavailable = await checkEmailAvailability(email, true);
+      if (unavailable) {
+        return;
+      }
+
       let photoURL = null;
 
       if (photoFile) photoURL = await imageUpload(photoFile);
@@ -174,7 +212,11 @@ const SignupFrom = () => {
                   name="email"
                   className="mt-1 w-full bg-white border border-blue-400 px-4 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
                   placeholder="Enter your email"
-                  onChange={(e) => setEmailForOtp(e.target.value)}
+                  onChange={(e) => {
+                    setEmailForOtp(e.target.value);
+                    setEmailExists(false);
+                  }}
+                  onBlur={(e) => checkEmailAvailability(e.target.value.trim(), true)}
                   disabled={otpVerified}
                 />
               </div>
@@ -182,11 +224,13 @@ const SignupFrom = () => {
               <button
                 type="button"
                 onClick={sendOTP}
-                disabled={sendingOtp}
+                disabled={sendingOtp || checkingEmail || emailExists}
                 className="bg-blue-600 text-white py-2 rounded font-medium flex items-center justify-center hover:bg-blue-700 transition"
               >
-                {sendingOtp
+                {sendingOtp || checkingEmail
                   ? <span className="loading loading-infinity loading-xl"></span>
+                  : emailExists
+                    ? "Unavailable"
                   : otpSent ? "Resend OTP" : "Send OTP"}
               </button>
             </div>

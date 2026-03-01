@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   Home,
   Grid,
@@ -13,6 +14,7 @@ import {
 import Sidebar from "./Sidbar";
 import useAuth from "../Hooks/useAuth";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
+import useAxiosSecure from "../Hooks/useAxiosSecure";
 import useRole from "../Hooks/useRole";
 
 const MobileBottomNav = () => {
@@ -20,9 +22,28 @@ const MobileBottomNav = () => {
 
   const { user } = useAuth();
   const axiosPublic = useAxiosPublic();
+  const axiosSecure = useAxiosSecure();
   const [role, roleLoading] = useRole();
 
   const [cartCount, setCartCount] = useState(0);
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ["admin-orders-badge-mobile"],
+    queryFn: async () => {
+      const { data } = await axiosSecure.get("/orders");
+      return data;
+    },
+    enabled: role === "admin",
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
+  });
+
+  const newOrdersCount = orders.filter(
+    (order) => order.status?.toLowerCase() === "pending"
+  ).length;
 
   /* ================= CART COUNT (REALTIME AUTO UPDATE) ================= */
   useEffect(() => {
@@ -70,7 +91,7 @@ const MobileBottomNav = () => {
                 <span className="text-xs">Home</span>
               </Link>
 
-              <Link to="/inventory" className="flex flex-col items-center text-blue-600">
+              <Link to="/admin/inventory" className="flex flex-col items-center text-blue-600">
                 <Boxes size={22} />
                 <span className="text-xs">Inventory</span>
               </Link>
@@ -83,14 +104,19 @@ const MobileBottomNav = () => {
                 <span className="text-xs">Shop</span>
               </Link>
 
-              <Link to="/add-products" className="flex flex-col items-center text-blue-600">
+              <Link to="/admin/add-products" className="flex flex-col items-center text-blue-600">
                 <PlusSquare size={22} />
                 <span className="text-xs">Add</span>
               </Link>
 
-              <Link to="/manage-orders" className="flex flex-col items-center text-blue-600">
+              <Link to="/admin/manage-orders" className="relative flex flex-col items-center text-blue-600">
                 <ShoppingCart size={22} />
                 <span className="text-xs">Orders</span>
+                {newOrdersCount > 0 && (
+                  <span className="absolute -top-1 -right-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                    {newOrdersCount > 99 ? "99+" : newOrdersCount}
+                  </span>
+                )}
               </Link>
             </>
           ) : (

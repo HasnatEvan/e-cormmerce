@@ -136,7 +136,7 @@ export const router = createBrowserRouter([
 
       /* ============ ADMIN PRIVATE ============ */
       {
-        path: "dashboard",
+        path: "admin/dashboard",
         element: (
           <AdminRoute>
             <Dashboard />
@@ -144,7 +144,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "add-products",
+        path: "admin/add-products",
         element: (
           <AdminRoute>
             <AddProduct />
@@ -152,7 +152,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "inventory",
+        path: "admin/inventory",
         element: (
           <AdminRoute>
             <Inventory />
@@ -160,7 +160,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "edit-products/:id",
+        path: "admin/edit-products/:id",
         element: (
           <AdminRoute>
             <EditProduct />
@@ -168,7 +168,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "manage-orders",
+        path: "admin/manage-orders",
         element: (
           <AdminRoute>
             <ManageOrders />
@@ -176,7 +176,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "manage-orders/:id",
+        path: "admin/manage-orders/:id",
         element: (
           <AdminRoute>
             <OrderDetails />

@@ -12,13 +12,34 @@ import {
 import { RiFileList3Line } from "react-icons/ri";
 import { MdManageAccounts } from "react-icons/md";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../Hooks/useAuth";
 import useRole from "../../Hooks/useRole";
+import useAxiosSecure from "../../Hooks/useAxiosSecure";
 
 const Sidebar = () => {
   const { user, logOut } = useAuth();
   const navigate = useNavigate();
   const [role, isLoading] = useRole();
+  const axiosSecure = useAxiosSecure();
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ["admin-orders-badge"],
+    queryFn: async () => {
+      const { data } = await axiosSecure.get("/orders");
+      return data;
+    },
+    enabled: role === "admin",
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
+  });
+
+  const newOrdersCount = orders.filter(
+    (order) => order.status?.toLowerCase() === "pending"
+  ).length;
 
   /* =====================
      LOGOUT HANDLER
@@ -56,7 +77,7 @@ const Sidebar = () => {
     <div
       className="
         w-full
-        md:w-60
+      
         bg-white
         shadow-md
         p-4 md:p-6
@@ -95,30 +116,35 @@ const Sidebar = () => {
         {role === "admin" && (
           <>
             <li>
-              <NavLink to="/dashboard" className={menuClass}>
+              <NavLink to="/admin/dashboard" className={menuClass}>
                 <FaThLarge className="text-lg" />
                 Dashboard
               </NavLink>
             </li>
 
             <li>
-              <NavLink to="/inventory" className={menuClass}>
+              <NavLink to="/admin/inventory" className={menuClass}>
                 <FaBoxes className="text-lg" />
                 Inventory
               </NavLink>
             </li>
 
             <li>
-              <NavLink to="/add-products" className={menuClass}>
+              <NavLink to="/admin/add-products" className={menuClass}>
                 <FaPlus className="text-lg" />
                 Add Products
               </NavLink>
             </li>
 
             <li>
-              <NavLink to="/manage-orders" className={menuClass}>
+              <NavLink to="/admin/manage-orders" className={menuClass}>
                 <MdManageAccounts className="text-lg" />
                 Manage Orders
+                {newOrdersCount > 0 && (
+                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-semibold text-white">
+                    {newOrdersCount > 99 ? "99+" : newOrdersCount}
+                  </span>
+                )}
               </NavLink>
             </li>
           </>

@@ -137,7 +137,7 @@ const EditProduct = () => {
             await new Promise((resolve) => setTimeout(resolve, 3000));
 
             toast.success("Product updated successfully");
-            navigate("/inventory");
+            navigate("/admin/inventory");
         } catch (err) {
             console.error(err);
             toast.error("Failed to update product");
