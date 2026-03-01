@@ -24,6 +24,7 @@ import MyOrders from "../Pages/Dashboard/UsersPages/MyOrders/MyOrders";
 
 /* ================= ADMIN ================= */
 import AddProduct from "../Pages/Dashboard/AdminPages/AddProduct/AddProduct";
+import Dashboard from "../Pages/Dashboard/AdminPages/Dashboard/Dashboard";
 import Inventory from "../Pages/Dashboard/AdminPages/Inventory/Inventory";
 import EditProduct from "../Pages/Dashboard/AdminPages/Inventory/EditeProduct";
 import ManageOrders from "../Pages/Dashboard/AdminPages/ManageOrders/ManageOrders";
@@ -134,6 +135,14 @@ export const router = createBrowserRouter([
 
 
       /* ============ ADMIN PRIVATE ============ */
+      {
+        path: "dashboard",
+        element: (
+          <AdminRoute>
+            <Dashboard />
+          </AdminRoute>
+        ),
+      },
       {
         path: "add-products",
         element: (

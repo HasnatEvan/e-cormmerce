@@ -7,6 +7,7 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaBoxes,
+  FaThLarge,
 } from "react-icons/fa";
 import { RiFileList3Line } from "react-icons/ri";
 import { MdManageAccounts } from "react-icons/md";
@@ -93,6 +94,13 @@ const Sidebar = () => {
         {/* ===== ADMIN MENU ===== */}
         {role === "admin" && (
           <>
+            <li>
+              <NavLink to="/dashboard" className={menuClass}>
+                <FaThLarge className="text-lg" />
+                Dashboard
+              </NavLink>
+            </li>
+
             <li>
               <NavLink to="/inventory" className={menuClass}>
                 <FaBoxes className="text-lg" />
