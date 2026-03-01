@@ -1,4 +1,9 @@
-import { FaPhoneAlt, FaUser, FaHeart, FaSearch } from "react-icons/fa";
+import {
+  FaPhoneAlt,
+  FaUser,
+  FaHeart,
+  FaSearch,
+} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import logo from "../../src/assets/Logo/logo.png";

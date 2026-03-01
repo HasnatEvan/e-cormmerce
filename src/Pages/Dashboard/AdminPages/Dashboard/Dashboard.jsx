@@ -86,7 +86,7 @@ const Dashboard = () => {
     const months = [];
     const now = new Date();
 
-    for (let i = 5; i >= 0; i -= 1) {
+    for (let i = 11; i >= 0; i -= 1) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         key: `${d.getFullYear()}-${d.getMonth()}`,
@@ -105,6 +105,43 @@ const Dashboard = () => {
       const key = `${date.getFullYear()}-${date.getMonth()}`;
       const amount = Number(order.subTotal ?? 0);
       if (monthMap.has(key)) monthMap.get(key).value += amount;
+    });
+
+    return months;
+  }, [orders]);
+
+  const monthlyProductSoldData = useMemo(() => {
+    const months = [];
+    const now = new Date();
+
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        key: `${d.getFullYear()}-${d.getMonth()}`,
+        label: d.toLocaleString("en-US", { month: "short" }),
+        value: 0,
+      });
+    }
+
+    const monthMap = new Map(months.map((m) => [m.key, m]));
+
+    orders.forEach((order) => {
+      const status = order.status?.toLowerCase();
+      if (status !== "delivered") return;
+
+      const date = new Date(order.orderTime);
+      if (Number.isNaN(date.getTime())) return;
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      if (!monthMap.has(key)) return;
+
+      const soldUnits = Array.isArray(order.items)
+        ? order.items.reduce(
+            (sum, item) => sum + Number(item?.quantity ?? 0),
+            0
+          )
+        : 0;
+
+      monthMap.get(key).value += soldUnits;
     });
 
     return months;
@@ -201,14 +238,16 @@ const Dashboard = () => {
                     const height = Math.max((item.value / maxValue) * 100, 8);
                     return (
                       <div key={item.label} className="flex flex-1 flex-col items-center">
-                        <div className="mb-1 text-xs font-medium text-slate-600">
-                          Tk {Math.round(item.value)}
-                        </div>
                         <div className="flex h-32 w-full items-end">
-                          <div
-                            className="w-full rounded-t-md bg-gradient-to-t from-emerald-500 to-cyan-500"
-                            style={{ height: `${height}%` }}
-                          />
+                          <div className="group relative flex h-full w-full items-end">
+                            <div
+                              className="w-full rounded-t-md bg-gradient-to-t from-emerald-500 to-cyan-500 cursor-pointer"
+                              style={{ height: `${height}%` }}
+                            />
+                            <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                              Tk {Math.round(item.value)}
+                            </div>
+                          </div>
                         </div>
                         <div className="mt-1 text-xs text-slate-600">{item.label}</div>
                       </div>
@@ -217,6 +256,40 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+          </section>
+
+          <section className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50 p-4 shadow-md">
+            <h2 className="text-lg font-semibold text-rose-900">
+              Monthly Products Sold (Last 12 Months)
+            </h2>
+            {loading ? (
+              <p className="mt-3 text-sm text-rose-600">Loading chart...</p>
+            ) : (
+              <div className="mt-5 flex h-44 items-end gap-3">
+                {monthlyProductSoldData.map((item) => {
+                  const maxValue = Math.max(
+                    ...monthlyProductSoldData.map((m) => m.value),
+                    1
+                  );
+                  const height = Math.max((item.value / maxValue) * 100, 8);
+
+                  return (
+                    <div key={item.label} className="flex flex-1 flex-col items-center">
+                      <div className="mb-1 text-xs font-medium text-slate-600">
+                        {Math.round(item.value)} pcs
+                      </div>
+                      <div className="flex h-32 w-full items-end">
+                        <div
+                          className="w-full rounded-t-md bg-gradient-to-t from-rose-500 to-orange-400"
+                          style={{ height: `${height}%` }}
+                        />
+                      </div>
+                      <div className="mt-1 text-xs text-slate-600">{item.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-pink-50 p-4 shadow-md">
