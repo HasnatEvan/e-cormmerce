@@ -5,6 +5,7 @@ import {
   Home,
   Grid,
   ShoppingBag,
+  LayoutDashboard,
   ShoppingCart,
   User,
   Boxes,
@@ -97,11 +98,11 @@ const MobileBottomNav = () => {
               </Link>
 
               <Link
-                to="/all-products"
+                to="/admin/dashboard"
                 className="flex flex-col items-center bg-white rounded-full -mt-6 p-3 shadow-lg text-blue-600 animate-bounce"
               >
-                <ShoppingBag size={26} />
-                <span className="text-xs">Shop</span>
+                <LayoutDashboard size={26} />
+                <span className="sr-only">Dashboard</span>
               </Link>
 
               <Link to="/admin/add-products" className="flex flex-col items-center text-blue-600">

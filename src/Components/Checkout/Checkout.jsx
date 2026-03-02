@@ -170,12 +170,6 @@ const Checkout = () => {
     `w-full px-3 py-2 rounded border ${errors[field] ? "border-red-500" : "border-blue-400"
     } focus:outline-none focus:border-blue-600`;
 
-  const paymentBox = (active) =>
-    `border rounded p-3 cursor-pointer transition ${active
-      ? "bg-blue-50 border-blue-600"
-      : "border-blue-300 hover:bg-blue-50"
-    }`;
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold mb-6 text-blue-600">
@@ -234,19 +228,9 @@ const Checkout = () => {
             onChange={(e) => setNotes(e.target.value)}
           />
 
-          <h3 className="text-lg font-semibold text-blue-600">
-            Payment Method
-          </h3>
-
-          <div className={paymentBox(true)}>
-            <p className="font-medium">SSLCommerz</p>
-            <p className="text-sm text-gray-600">
-              Pay securely with card/mobile banking.
-            </p>
-          </div>
-
-          <p className="text-sm text-red-600">
-            ?????? Delivery fee ???{DELIVERY_FEE} will be added to total
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+            Delivery charge: Tk {DELIVERY_FEE} will be added to the total
+            amount.
           </p>
 
         </div>

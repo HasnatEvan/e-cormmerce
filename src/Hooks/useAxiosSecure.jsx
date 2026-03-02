@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuth from './useAuth'
 
 export const axiosSecure = axios.create({
-  baseURL: 'http://localhost:5000',  
+  baseURL: 'https://server.fastforwardlogistics.org',  
   withCredentials: true,
 })
 
@@ -13,7 +13,7 @@ const useAxiosSecure = () => {
   const { logOut } = useAuth()
 
   useEffect(() => {
-    axiosSecure.interceptors.response.use(
+    const interceptorId = axiosSecure.interceptors.response.use(
       res => {
         return res
       },
@@ -28,6 +28,10 @@ const useAxiosSecure = () => {
         return Promise.reject(error)
       }
     )
+
+    return () => {
+      axiosSecure.interceptors.response.eject(interceptorId)
+    }
   }, [logOut, navigate])
 
   return axiosSecure

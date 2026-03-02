@@ -3,20 +3,23 @@ import useAuth from "./useAuth";
 import useAxiosSecure from "./useAxiosSecure";
 
 const useRole = () => {
-    const axiosSecure = useAxiosSecure();
-    const { user } = useAuth();
+  const axiosSecure = useAxiosSecure();
+  const { user, loading: authLoading } = useAuth();
+  const hasUser = Boolean(user?.email);
 
-    const { data: role = '', isLoading } = useQuery({
-        queryKey: ['role', user?.email],
-        queryFn: async () => {
-            if (!user?.email) return ''; // ইউজার না থাকলে API কল হবে না
-            const { data } = await axiosSecure.get(`/users/role/${user.email}`);
-            return data?.role || ''; // ডিফল্ট ফাঁকা স্ট্রিং রিটার্ন করবে
-        },
-        enabled: !!user?.email // ✅ ইউজার থাকলেই কেবলমাত্র API কল হবে
-    });
+  const { data: role = "", isLoading } = useQuery({
+    queryKey: ["role", user?.email],
+    queryFn: async () => {
+      if (!user?.email) return "";
+      const { data } = await axiosSecure.get(`/users/role/${user.email}`);
+      return data?.role || "";
+    },
+    enabled: hasUser && !authLoading,
+  });
 
-    return [role, isLoading];
+  const roleLoading = authLoading || (hasUser && isLoading);
+
+  return [role, roleLoading];
 };
 
 export default useRole;

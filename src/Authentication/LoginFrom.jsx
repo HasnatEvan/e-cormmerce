@@ -1,11 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import useAuth from "../Hooks/useAuth";
 
 const LoginForm = () => {
-  const { signIn, logOut } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -49,21 +48,7 @@ const LoginForm = () => {
 
     // ---------- LOGIN ----------
     try {
-      const result = await signIn(email, password);
-
-      try {
-        await axios.post(
-          "http://localhost:5000/jwt",
-          { email: result?.user?.email || email },
-          { withCredentials: true }
-        );
-      } catch (jwtError) {
-        if (jwtError?.response?.status === 403) {
-          await logOut();
-          return;
-        }
-        throw jwtError;
-      }
+      await signIn(email, password);
 
       toast.success("Login successful!");
 

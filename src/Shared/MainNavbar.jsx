@@ -17,7 +17,7 @@ const MainNavbar = () => {
   const { user } = useAuth();
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
-  const [role] = useRole();
+  const [role, roleLoading] = useRole();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -46,7 +46,7 @@ const MainNavbar = () => {
 
   /* ================= Wishlist & Cart Count (AUTO-UPDATE) ================= */
   useEffect(() => {
-    if (!user?.email || role === "admin") {
+    if (!user?.email || roleLoading || role === "admin") {
       setWishlistCount(0);
       setCartCount(0);
       return;
@@ -79,7 +79,7 @@ const MainNavbar = () => {
       window.removeEventListener("wishlist-updated", handler);
       window.removeEventListener("cart-updated", handler);
     };
-  }, [user, axiosPublic, role]);
+  }, [user, axiosPublic, role, roleLoading]);
 
   /* ================= MOBILE LIVE SEARCH ================= */
   useEffect(() => {
@@ -199,7 +199,7 @@ const MainNavbar = () => {
           </NavLink>
 
           {/* Cart (hide for admin) */}
-          {role !== "admin" && (
+          {!roleLoading && role !== "admin" && (
             <NavLink to="/cart" className="relative flex items-center gap-2 text-blue-500">
               <FaShoppingCart className="text-xl" />
               <span className="text-sm">Cart</span>

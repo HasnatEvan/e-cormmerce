@@ -37,7 +37,7 @@ const AuthProviders = ({ children }) => {
 
     try {
       await signOut(auth);
-      await axios.get("http://localhost:5000/logout", {
+      await axios.get("https://server.fastforwardlogistics.org/logout", {
         withCredentials: true,
       });
     } catch (logoutErr) {
@@ -116,19 +116,18 @@ const AuthProviders = ({ children }) => {
       const fetchJWT = async () => {
         try {
           if (currentUser?.email) {
-            setUser(currentUser);
-
             await axios.post(
-              "http://localhost:5000/jwt",
+              "https://server.fastforwardlogistics.org/jwt",
               { email: currentUser.email },
               { withCredentials: true }
             );
+            setUser(currentUser);
             blockedAlertShownRef.current = false;
           } else {
             setUser(null);
             blockedAlertShownRef.current = false;
 
-            await axios.get("http://localhost:5000/logout", {
+            await axios.get("https://server.fastforwardlogistics.org/logout", {
               withCredentials: true,
             });
           }
@@ -139,6 +138,8 @@ const AuthProviders = ({ children }) => {
           // Blocked user: force immediate logout from Firebase + backend cookie
           if (status === 403) {
             await forceLogoutIfBlocked(true);
+          } else {
+            setUser(null);
           }
         } finally {
           setLoading(false);
@@ -157,7 +158,7 @@ const AuthProviders = ({ children }) => {
 
     const intervalId = setInterval(async () => {
       try {
-        await axios.get(`http://localhost:5000/users/role/${user.email}`, {
+        await axios.get(`https://server.fastforwardlogistics.org/users/role/${user.email}`, {
           withCredentials: true,
         });
       } catch (err) {
